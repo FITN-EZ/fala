@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Fala</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0E5E4E">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Fala">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Familjen+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F3F5F1; --surface:#FFFFFF; --ink:#15201B; --muted:#5B6862; --line:#D9DFDA;
+  --mata:#0E5E4E; --mata-soft:#DCEDE7; --ipe:#F2B705; --ipe-ink:#2A2100;
+  --roxo:#9B3C8C; --roxo-soft:#F5E4F1; --wave:#15201B; --wave-bg:#FFFFFF;
+  color-scheme: light;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E1814; --surface:#16231E; --ink:#E7EEEA; --muted:#9BACA4; --line:#2A3A33;
+    --mata:#5CC8A8; --mata-soft:#1C3A30; --ipe:#F2B705; --ipe-ink:#2A2100;
+    --roxo:#E591D7; --roxo-soft:#3A2235; --wave:#E7EEEA; --wave-bg:#0E1814;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E1814; --surface:#16231E; --ink:#E7EEEA; --muted:#9BACA4; --line:#2A3A33;
+  --mata:#5CC8A8; --mata-soft:#1C3A30; --ipe:#F2B705; --ipe-ink:#2A2100;
+  --roxo:#E591D7; --roxo-soft:#3A2235; --wave:#E7EEEA; --wave-bg:#0E1814;
+  color-scheme: dark;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif;font-size:17px;line-height:1.5;-webkit-tap-highlight-color:transparent}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+h1,h2,h3{font-family:"Familjen Grotesk","Atkinson Hyperlegible",system-ui,sans-serif;font-weight:600;line-height:1.15;margin:0}
+h1{font-size:1.75rem;letter-spacing:-0.01em}
+h2{font-size:1.25rem}
+h3{font-size:1.05rem}
+p{margin:0}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid var(--ipe);outline-offset:2px}
+.wrap{max-width:560px;margin:0 auto;padding:16px 16px 110px}
+.view{display:none}
+.view.on{display:block}
+.muted{color:var(--muted)}
+.small{font-size:.875rem}
+.stack>*+*{margin-top:12px}
+.row{display:flex;align-items:center;gap:10px}
+.between{justify-content:space-between}
+.grow{flex:1}
+
+/* buttons */
+.btn{border:0;border-radius:999px;padding:13px 20px;font-weight:700;background:var(--ipe);color:var(--ipe-ink);min-height:48px}
+.btn.wide{width:100%}
+.btn.quiet{background:transparent;color:var(--ink);border:1.5px solid var(--line)}
+.btn.green{background:var(--mata);color:var(--surface)}
+.btn:disabled{opacity:.5;cursor:default}
+.chip{border:1.5px solid var(--line);background:var(--surface);border-radius:10px;padding:8px 12px;font-size:.9rem}
+.chip.on{border-color:var(--mata);background:var(--mata-soft)}
+.icon{border:0;background:var(--mata-soft);color:var(--mata);width:44px;height:44px;border-radius:50%;display:inline-grid;place-items:center;flex:none}
+.icon svg{width:22px;height:22px}
+.link{border:0;background:none;color:var(--mata);font-weight:700;padding:6px 0}
+
+/* hero */
+.wave{display:block;width:100%;height:64px;border-radius:14px;background:var(--wave-bg)}
+.count{margin-top:14px}
+.count .num{font-family:"Familjen Grotesk",sans-serif;font-weight:700;font-size:5.5rem;line-height:.9;letter-spacing:-0.04em}
+.count .lbl{display:block;margin-top:6px;color:var(--muted)}
+.phase{margin-top:18px;padding:14px 16px;border-left:4px solid var(--ipe);background:var(--surface);border-radius:0 12px 12px 0}
+.phase h3{margin-bottom:4px}
+
+/* lists */
+.list{background:var(--surface);border-radius:14px;overflow:hidden}
+.item{display:flex;align-items:center;gap:12px;padding:14px 16px;border-top:1px solid var(--line);width:100%;text-align:left;background:none;border-left:0;border-right:0;border-bottom:0}
+.item:first-child{border-top:0}
+.tick{width:26px;height:26px;border-radius:50%;border:2px solid var(--line);flex:none;display:grid;place-items:center}
+.tick.done{background:var(--mata);border-color:var(--mata);color:var(--surface)}
+.tick svg{width:14px;height:14px}
+.item .t{font-weight:700}
+.item .s{font-size:.875rem;color:var(--muted)}
+.bar{height:8px;background:var(--line);border-radius:4px;overflow:hidden}
+.bar>i{display:block;height:100%;background:var(--mata);border-radius:4px}
+.section-title{margin:26px 0 10px}
+
+/* study card */
+.studyhead{display:flex;gap:14px;align-items:center;font-size:.9rem;color:var(--muted);margin-bottom:12px}
+.studyhead b{color:var(--ink)}
+.card{background:var(--surface);border-radius:18px;padding:22px 18px;min-height:280px;display:flex;flex-direction:column;gap:16px}
+.mode{font-size:.875rem;color:var(--muted)}
+.badge{display:inline-block;font-size:.75rem;font-weight:700;padding:2px 8px;border-radius:6px;background:var(--ipe);color:var(--ipe-ink);margin-left:6px;vertical-align:middle}
+.prompt{font-size:1.5rem;line-height:1.3;font-family:"Familjen Grotesk",sans-serif;font-weight:500}
+.prompt.hidden-text{color:var(--muted);font-size:1.1rem;font-family:inherit}
+.answer{border-top:1px dashed var(--line);padding-top:14px}
+.answer .pt{font-size:1.35rem;font-family:"Familjen Grotesk",sans-serif;font-weight:600;color:var(--mata)}
+.answer .en{color:var(--muted);margin-top:4px}
+.inputrow{display:flex;gap:8px;align-items:center}
+.text{flex:1;min-width:0;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);border-radius:12px;padding:12px 14px;font:inherit;font-size:1.05rem}
+.accents{display:flex;flex-wrap:wrap;gap:6px}
+.accents button{border:1px solid var(--line);background:var(--bg);border-radius:8px;min-width:36px;height:36px;font-size:1rem}
+.feedback{font-size:.95rem}
+.feedback .miss{background:var(--roxo-soft);color:var(--roxo);border-radius:4px;padding:0 3px}
+.feedback .hit{color:var(--mata)}
+.rates{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px}
+.rate{border:0;border-radius:12px;padding:10px 4px;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:2px;min-height:58px}
+.rate small{font-weight:400;font-size:.75rem;opacity:.85}
+.r1{background:var(--roxo-soft);color:var(--roxo)}
+.r2{background:var(--bg);color:var(--ink);border:1.5px solid var(--line)}
+.r3{background:var(--mata);color:var(--surface)}
+.r4{background:var(--ipe);color:var(--ipe-ink)}
+.listen{background:var(--surface);border-radius:18px;padding:26px 18px;text-align:center;min-height:320px;display:flex;flex-direction:column;justify-content:center;gap:16px}
+.listen .big{font-size:1.6rem;font-family:"Familjen Grotesk",sans-serif;font-weight:600}
+
+/* segmented */
+.seg{display:grid;grid-template-columns:repeat(3,1fr);background:var(--surface);border-radius:12px;padding:4px;gap:4px;margin:14px 0 18px}
+.seg button{border:0;background:none;border-radius:9px;padding:10px 4px;font-weight:700;color:var(--muted)}
+.seg button.on{background:var(--mata-soft);color:var(--mata)}
+
+/* chat */
+.scen{display:block;width:100%;text-align:left;background:var(--surface);border:0;border-radius:14px;padding:14px 16px;margin-bottom:10px}
+.scen b{display:block;font-family:"Familjen Grotesk",sans-serif;font-size:1.1rem}
+.msgs{display:flex;flex-direction:column;gap:12px;margin:14px 0}
+.msg{max-width:88%;padding:12px 14px;border-radius:16px}
+.msg.bia{background:var(--surface);align-self:flex-start;border-bottom-left-radius:4px}
+.msg.me{background:var(--mata);color:var(--surface);align-self:flex-end;border-bottom-right-radius:4px}
+.msg .tr{color:var(--muted);font-size:.9rem;margin-top:6px}
+.msg .tools{display:flex;gap:14px;margin-top:6px}
+.msg .tools button{border:0;background:none;color:var(--mata);font-size:.85rem;font-weight:700;padding:0}
+.corr{align-self:flex-end;max-width:88%;background:var(--roxo-soft);color:var(--ink);border-radius:12px;padding:10px 12px;font-size:.95rem;margin-top:-6px}
+.corr b{color:var(--roxo)}
+.composer{position:sticky;bottom:calc(76px + env(safe-area-inset-bottom,0px));background:var(--bg);padding:8px 0}
+.typing{color:var(--muted);font-style:italic}
+
+/* shadow */
+.line{display:block;width:100%;text-align:left;background:var(--surface);border:0;border-radius:12px;padding:12px 14px;margin-bottom:8px;border-left:4px solid transparent}
+.line.cur{border-left-color:var(--ipe)}
+.line .en{color:var(--muted);font-size:.9rem}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pair button{border:1.5px solid var(--line);background:var(--surface);border-radius:14px;padding:18px 8px;font-size:1.4rem;font-family:"Familjen Grotesk",sans-serif;font-weight:600}
+.pair button.right{border-color:var(--mata);background:var(--mata-soft)}
+.pair button.wrong{border-color:var(--roxo);background:var(--roxo-soft)}
+
+/* grammar */
+.expl{background:var(--surface);border-radius:14px;padding:16px}
+.expl p+p,.expl ul{margin-top:10px}
+.expl ul{padding-left:20px;margin-bottom:0}
+.expl em{color:var(--mata);font-style:normal;font-weight:700}
+.opts{display:grid;gap:8px}
+.opt{border:1.5px solid var(--line);background:var(--surface);border-radius:12px;padding:14px;text-align:left;font-size:1.05rem}
+.opt.right{border-color:var(--mata);background:var(--mata-soft)}
+.opt.wrong{border-color:var(--roxo);background:var(--roxo-soft)}
+
+/* progress */
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat{background:var(--surface);border-radius:14px;padding:14px}
+.stat .v{font-family:"Familjen Grotesk",sans-serif;font-size:1.9rem;font-weight:700;line-height:1.1}
+.stat .k{font-size:.85rem;color:var(--muted)}
+.chart{display:flex;align-items:flex-end;gap:4px;height:110px;background:var(--surface);border-radius:14px;padding:12px}
+.chart div{flex:1;background:var(--mata);border-radius:3px 3px 0 0;min-height:2px;position:relative}
+.chart div.today{background:var(--ipe)}
+.chart div.goal{background:var(--mata)}
+.timeline{background:var(--surface);border-radius:14px;padding:6px 16px}
+.tl{display:flex;gap:12px;padding:10px 0;border-top:1px solid var(--line)}
+.tl:first-child{border-top:0}
+.tl .n{font-family:"Familjen Grotesk",sans-serif;font-weight:700;width:22px;color:var(--muted)}
+.tl.now .n{color:var(--mata)}
+.setting{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 16px;border-top:1px solid var(--line)}
+.setting:first-child{border-top:0}
+.setting select{font:inherit;background:var(--bg);color:var(--ink);border:1.5px solid var(--line);border-radius:10px;padding:8px;max-width:55%}
+textarea.text{width:100%;min-height:110px;font-size:.8rem;font-family:ui-monospace,Menlo,monospace}
+details{background:var(--surface);border-radius:14px;padding:14px 16px}
+details summary{font-weight:700;cursor:pointer}
+details ul{margin:10px 0 0;padding-left:20px}
+details li+li{margin-top:6px}
+.note{font-size:.875rem;color:var(--muted);margin-top:8px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(90px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:.9rem;z-index:30;opacity:0;transition:opacity .2s;pointer-events:none;max-width:90vw}
+.toast.on{opacity:1}
+
+/* tabs */
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
+.tabs .in{max-width:560px;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr)}
+.tabs button{border:0;background:none;padding:8px 2px 10px;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:.72rem;color:var(--muted);min-height:60px}
+.tabs button svg{width:24px;height:24px}
+.tabs button.on{color:var(--mata);font-weight:700}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <section class="view on" id="v-today"></section>
+  <section class="view" id="v-study"></section>
+  <section class="view" id="v-speak"></section>
+  <section class="view" id="v-grammar"></section>
+  <section class="view" id="v-progress"></section>
+</main>
+<nav class="tabs" aria-label="Sections"><div class="in">
+  <button data-tab="today" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12c3-4 6-4 9 0s6 4 9 0"/><path d="M3 18c3-4 6-4 9 0s6 4 9 0"/><path d="M3 6c3-4 6-4 9 0s6 4 9 0"/></svg>Hoje</button>
+  <button data-tab="study"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="4" y="5" width="13" height="16" rx="2"/><path d="M8 3h10a2 2 0 0 1 2 2v12"/></svg>Estudar</button>
+  <button data-tab="speak"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 5h16v11H9l-5 4z"/></svg>Falar</button>
+  <button data-tab="grammar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 19 10 5l5 14M7 14h6M16 9h4M18 7v4"/></svg>Gramática</button>
+  <button data-tab="progress"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 20V12M12 20V5M19 20v-6"/></svg>Progresso</button>
+</div></nav>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+/* ================= CONTENT ================= */
+const UNITS=[
+{t:"Primeiro papo",items:[["E aí, tudo bem?","Hey, how’s it going?","Olá, como vai?"],["Tudo, e você?","Good, and you?","Estou bem, obrigado. E você?"],["Tudo certo!","All good!"],["Prazer, sou o Ezra.","Nice to meet you, I’m Ezra.","Muito prazer, eu me chamo Ezra."],["Como é seu nome?","What’s your name?","Como você se chama?"],["Sou de Londres.","I’m from London.","Eu sou de Londres."],["Cê é de onde?","Where are you from?","De onde você é?"],["Valeu!","Thanks!","Muito obrigado."],["Imagina!","Don’t mention it!","De nada."],["Foi mal, não entendi.","Sorry, I didn’t catch that.","Desculpe, eu não entendi."],["Fala mais devagar?","Can you speak a bit slower?","Você poderia falar mais devagar, por favor?"]]},
+{t:"Cê, tá, tô, pra",items:[["Cê tá bem?","You OK?","Você está bem?"],["Tô cansadão hoje.","I’m knackered today.","Eu estou muito cansado hoje."],["Cê tá onde?","Where are you?","Onde você está?"],["Tô chegando.","I’m nearly there.","Estou quase chegando."],["Tava pensando nisso agora.","I was just thinking about that.","Eu estava pensando nisso agora."],["Vou pra casa.","I’m heading home.","Eu vou para casa."],["Vamo pro bar?","Shall we go to the bar?","Vamos para o bar?"],["Tá bom, pode ser.","OK, sure.","Está bem."],["Tá muito calor, né?","It’s so hot, isn’t it?","Está muito quente, não é?"],["Cê vai também?","Are you going too?","Você também vai?"]]},
+{t:"A gente",items:[["A gente se vê amanhã.","See you tomorrow.","Nós nos vemos amanhã."],["A gente tá atrasado.","We’re late.","Nós estamos atrasados."],["A gente podia sair hoje.","We could go out tonight.","Nós poderíamos sair hoje."],["A gente se conheceu no trabalho.","We met at work.","Nós nos conhecemos no trabalho."],["Bora? A gente pega um Uber.","Shall we? We’ll get an Uber.","Vamos? Nós pegamos um Uber."],["A gente tava falando de você.","We were talking about you.","Nós estávamos falando de você."],["Todo mundo vai.","Everyone’s going.","Todos vão."],["A gente se fala.","Talk soon.","Nós conversamos depois."],["A gente vai ver.","We’ll see.","Veremos."],["A gente nem sabia.","We had no idea.","Nós não sabíamos."]]},
+{t:"Responder como brasileiro",items:[["Quero, sim.","Yes please (I do want it).","Sim, eu quero."],["Tenho, sim.","Yes, I have.","Sim, eu tenho."],["Sei não.","No idea.","Eu não sei."],["Vou, sim!","Yeah, I’m going!","Sim, eu vou."],["Gosto, gosto muito.","Yeah, I really like it.","Sim, eu gosto muito."],["Posso, claro.","Sure, I can.","Sim, eu posso."],["Não tenho, não.","No, I don’t.","Não, eu não tenho."],["Acho que sim.","I reckon so."],["Pode ser.","Sure, why not."],["Com certeza!","Definitely!"]]},
+{t:"Reações",items:[["Nossa!","Wow!"],["Sério?","Seriously?"],["Jura?","No way, really?"],["Pois é.","I know, right."],["Caramba!","Blimey!"],["Putz, que chato.","Ugh, that’s rubbish.","Que pena."],["Que isso!","Come on! / Don’t be silly!"],["Mentira!","Get out! No way!"],["Que massa!","That’s awesome!","Que legal!"],["Ah, entendi.","Ah, got it."],["É mesmo?","Oh, really?"]]},
+{t:"Muletas para ganhar tempo",items:[["Então, é que…","So, the thing is…"],["Tipo assim…","Like…"],["Sabe? Tipo, não sei.","You know? Like, I don’t know."],["Aí ele falou que não vinha.","Then he said he wasn’t coming.","Então ele disse que não viria."],["Deixa eu ver…","Let me see…","Deixe-me ver."],["Como é que fala…","How do you say…"],["Na real, prefiro ficar em casa.","Honestly, I’d rather stay in.","Na verdade, eu prefiro ficar em casa."],["Enfim, deixa pra lá.","Anyway, never mind.","Enfim, esqueça."],["Ou seja, não vai dar.","Basically, it’s not happening.","Ou seja, não será possível."],["Mas assim, não é bem isso.","But like, that’s not quite it."]]},
+{t:"Pedir sem soar robô",items:[["Me vê um café?","Can I get a coffee?","Eu gostaria de um café, por favor."],["Me dá uma água sem gás?","Can I have a still water?","Por favor, uma água sem gás."],["Dá pra trocar?","Can I swap it?","É possível trocar?"],["Cê pode me ajudar rapidinho?","Can you help me real quick?","Você poderia me ajudar?"],["Será que tem mesa pra dois?","Any chance of a table for two?","Há uma mesa para duas pessoas?"],["Queria a conta, por favor.","Could we get the bill, please?","Eu gostaria da conta."],["Tem como mandar por e-mail?","Any way you could email it?","Seria possível enviar por e-mail?"],["Me passa o sal?","Pass me the salt?","Você pode me passar o sal?"],["Me empresta seu carregador?","Can I borrow your charger?","Você pode me emprestar seu carregador?"],["Aceita cartão?","Do you take card?","Vocês aceitam cartão?"]]},
+{t:"Diminutivos",items:[["Só um minutinho!","Just a sec!","Um momento, por favor."],["Vou ali rapidinho.","I’m just popping out.","Vou sair rapidamente."],["É pertinho daqui.","It’s really close.","É muito perto daqui."],["Bora tomar um cafezinho?","Fancy a quick coffee?","Vamos tomar um café?"],["Tá quentinho ainda.","It’s still nice and warm."],["Devagarinho!","Nice and slow!"],["Cadê o controle?","Where’s the remote?","Onde está o controle remoto?"],["Tô com uma fominha.","I’m a bit peckish.","Estou com um pouco de fome."],["Agorinha mesmo.","Just this second."],["Fica tranquilo, é rapidinho.","Don’t worry, it’s quick."]]},
+{t:"Gírias do dia a dia",items:[["Beleza?","Alright?"],["Beleza, fechou!","Cool, deal!"],["De boa.","No worries."],["Tô de boa.","I’m chilling."],["Partiu praia!","Beach time!"],["Vai rolar uma festa sábado.","There’s a party happening Saturday.","Haverá uma festa no sábado."],["Cara, que viagem!","Mate, that’s mad!"],["Ele tava zoando.","He was messing about.","Ele estava brincando."],["Tamo junto!","I’ve got your back!"],["Falou, até mais!","Later!"],["Mano, sério?","Bro, seriously?"],["Tô nem aí.","I couldn’t care less."]]},
+{t:"Pronomes de verdade",items:[["Te ligo mais tarde.","I’ll call you later.","Eu ligo para você mais tarde."],["Me ajuda aqui?","Give me a hand?","Você pode me ajudar?"],["Vi ele ontem.","I saw him yesterday.","Eu o vi ontem."],["Cê conhece ela?","Do you know her?","Você a conhece?"],["Me fala depois.","Tell me later.","Fale-me depois."],["Deixa comigo.","Leave it with me."],["Te espero lá fora.","I’ll wait for you outside.","Eu espero você lá fora."],["Já te falei!","I told you already!","Eu já lhe disse."],["Comprei, mas não usei ainda.","I bought it but haven’t used it yet.","Eu o comprei, mas ainda não o usei."],["Pega pra mim?","Grab it for me?","Você pode pegar para mim?"]]},
+{t:"Tem (there is)",items:[["Tem farmácia aqui perto?","Is there a pharmacy nearby?","Há uma farmácia aqui perto?"],["Tinha muita gente lá.","There were loads of people there.","Havia muitas pessoas lá."],["Não tem problema.","No problem.","Não há problema."],["Tem que ser hoje?","Does it have to be today?"],["Tem como?","Is that doable?","É possível?"],["Tem alguém aí?","Anyone there?","Há alguém aí?"],["Faz tempo que não te vejo!","Long time no see!","Há muito tempo que não o vejo."],["Faz uns três anos.","About three years ago.","Há aproximadamente três anos."],["Não tem jeito.","Nothing you can do."],["Nada a ver.","That makes no sense / unrelated.","Isso não tem relação."],["Tem certeza?","Are you sure?"]]},
+{t:"Futuro do jeito falado",items:[["Vou trabalhar amanhã.","I’m working tomorrow.","Eu trabalharei amanhã."],["Cê vai fazer o quê no fim de semana?","What are you up to this weekend?","O que você fará no fim de semana?"],["Vou pensar.","I’ll think about it.","Pensarei."],["Vai chover hoje.","It’s gonna rain today.","Choverá hoje."],["Amanhã eu te ligo.","I’ll call you tomorrow.","Ligarei para você amanhã."],["Sábado eu tô livre.","I’m free on Saturday.","Estarei livre no sábado."],["Vou dar uma olhada.","I’ll have a look."],["Vai dar certo.","It’ll work out."],["Já já eu chego.","I’ll be there any second."],["Depois a gente vê isso.","We’ll sort that later.","Veremos isso depois."]]},
+{t:"Passado no papo",items:[["Cê viu o jogo ontem?","Did you watch the game last night?","Você assistiu ao jogo ontem?"],["Fui num barzinho com uns amigos.","I went to a little bar with some mates.","Fui a um bar com alguns amigos."],["Já comeu?","Have you eaten?","Você já comeu?"],["Ainda não terminei.","I haven’t finished yet."],["Ela me ligou ontem à noite.","She called me last night."],["Esqueci a carteira em casa.","I left my wallet at home."],["Curtiu o filme?","Did you enjoy the film?","Você gostou do filme?"],["Choveu o dia inteiro.","It rained all day."],["Nem vi a hora passar.","I totally lost track of time.","Não percebi o tempo passar."],["Dormi supermal.","I slept terribly.","Dormi muito mal."]]},
+{t:"Como era",items:[["Quando eu era criança, jogava bola todo dia.","As a kid, I played football every day.","Quando eu era criança, eu jogava futebol todos os dias."],["Tava dormindo quando cê ligou.","I was asleep when you called.","Eu estava dormindo quando você ligou."],["Eu morava com meus pais.","I used to live with my parents."],["Tava um frio absurdo.","It was ridiculously cold.","Fazia muito frio."],["Eu queria te perguntar uma coisa.","I wanted to ask you something."],["A gente sempre ia pra praia no verão.","We always went to the beach in summer.","Nós sempre íamos à praia no verão."],["Nem sabia disso.","I had no idea.","Eu não sabia disso."],["Eu achava que era mais fácil.","I thought it’d be easier."],["Cê tava fazendo o quê?","What were you up to?","O que você estava fazendo?"],["Antigamente era diferente.","It used to be different."]]},
+{t:"Opinião sem robô",items:[["Pra mim, vale a pena.","For me, it’s worth it.","Na minha opinião, vale a pena."],["Concordo total.","Totally agree.","Concordo plenamente com você."],["Sei lá, depende.","Dunno, depends."],["Não tenho certeza, não.","I’m not so sure."],["Achei meio caro.","I thought it was a bit pricey.","Achei um pouco caro."],["Foi bom, mas nada demais.","It was good, but nothing special."],["Não curti muito.","I wasn’t really a fan.","Eu não gostei muito."],["É uma boa, hein!","Good shout!"],["Tô em dúvida.","I’m in two minds."],["Pior que é verdade.","Annoyingly, that’s true."]]},
+{t:"Sentimentos",items:[["Tô com fome.","I’m hungry.","Estou com fome."],["Tô morrendo de sono.","I’m dying to sleep."],["Que vergonha!","How embarrassing!"],["Fiquei superfeliz.","I was so happy.","Fiquei muito feliz."],["Que saco!","What a drag!"],["Tô preocupado com isso.","I’m worried about it.","Estou preocupado com isso."],["Relaxa, não esquenta.","Relax, don’t sweat it.","Não se preocupe."],["Fiquei bolado.","I got wound up."],["Tô animadão pra viagem!","I’m so hyped for the trip!","Estou muito animado para a viagem."],["Tô com saudade de você.","I miss you."]]},
+{t:"Padaria e boteco",items:[["Me vê um pão de queijo e um pingado?","Can I get a cheese bread and a coffee with a dash of milk?"],["O que cê recomenda?","What do you recommend?","O que você recomenda?"],["Tava uma delícia!","That was delicious!","Estava delicioso."],["Pode ser sem cebola?","Can you do it without onion?"],["Vou de prato feito.","I’ll go for the set plate.","Eu vou querer o prato feito."],["Desce mais uma?","Another round?"],["Essa é a saideira!","This is the last one!"],["Bora rachar a conta?","Shall we split the bill?","Vamos dividir a conta?"],["Tá trincando de gelada!","It’s ice cold!"],["Tem opção vegetariana?","Any veggie options?"]]},
+{t:"Trampo",items:[["Trabalho com dados do mercado imobiliário.","I work with property market data.","Eu trabalho com dados do mercado imobiliário."],["Os imóveis subiram muito.","Property prices have shot up.","Os preços dos imóveis subiram muito."],["Tô atolado de trabalho.","I’m swamped.","Estou com muito trabalho."],["Me manda o relatório?","Can you send me the report?","Você pode me enviar o relatório?"],["Vou dar uma olhada nos números e te aviso.","I’ll look at the numbers and let you know."],["Qual é o prazo?","What’s the deadline?"],["Bora marcar uma call?","Shall we set up a call?","Vamos agendar uma reunião?"],["Tô migrando pra área de IA.","I’m moving into AI.","Estou mudando de carreira para inteligência artificial."],["Hoje foi puxado.","Today was rough.","Hoje foi um dia difícil."],["Sextou!","Friday at last!"]]},
+{t:"Academia e boxe",items:[["Bora treinar!","Let’s train!"],["Mais uma! Cê consegue!","One more! You’ve got this!","Mais uma! Você consegue!"],["Segura a postura.","Hold your posture."],["Respira, respira!","Breathe, breathe!"],["Hoje é dia de perna.","It’s leg day."],["Tô todo dolorido.","I’m sore all over.","Estou muito dolorido."],["Treino boxe faz uns anos.","I’ve been boxing for a few years.","Eu treino boxe há alguns anos."],["Guarda alta!","Hands up!"],["Solta o jab!","Throw the jab!"],["Mandou bem!","Nice one!","Muito bem!"]]},
+{t:"Rolê e planos",items:[["Bora tomar uma?","Fancy a drink?","Vamos tomar uma cerveja?"],["Cê tá livre sábado?","You free Saturday?","Você está livre no sábado?"],["Que tal amanhã à noite?","How about tomorrow night?"],["Me chama no zap.","Hit me up on WhatsApp.","Mande-me uma mensagem no WhatsApp."],["Foi mal, vou atrasar um pouquinho.","Sorry, I’ll be a bit late.","Desculpe, vou me atrasar."],["Combinado!","Deal!"],["Fechou, sábado então.","Sorted, Saturday then."],["Hoje não vai dar.","Can’t make it today.","Hoje não poderei."],["Fica pra próxima.","Next time, then."],["Cola aqui em casa!","Come round mine!","Venha à minha casa."]]},
+{t:"Expressões",items:[["Deu certo!","It worked!"],["Deu ruim.","It went south."],["Saiu caro.","It cost a bomb."],["Paguei o maior mico.","I made a total fool of myself."],["Vou dar um jeito.","I’ll find a way."],["Tá de brincadeira!","You’re kidding!"],["Ele chutou o balde.","He just gave up."],["Caiu a ficha.","The penny dropped."],["Fala sério!","Come off it!"],["Na moral?","Honestly? / For real?"]]},
+{t:"Tomara que…",items:[["Espero que cê goste.","Hope you like it.","Espero que você goste."],["Tomara que não chova!","Fingers crossed it doesn’t rain!"],["Talvez eu vá.","I might go."],["Quero que cê venha.","I want you to come.","Quero que você venha."],["Não acho que seja uma boa.","I don’t reckon that’s a good idea.","Não acho que seja uma boa ideia."],["Antes que eu esqueça…","Before I forget…"],["Duvido que ele saiba.","I doubt he knows."],["Caso precise, me liga.","If you need anything, call me.","Caso você precise, ligue-me."],["Tomara que dê certo.","Hope it works out."],["Fala devagar pra eu entender.","Speak slowly so I can follow.","Fale devagar para que eu entenda."]]},
+{t:"Se e quando",items:[["Se der, eu vou.","If I can, I’ll go.","Se for possível, eu irei."],["Quando cê chegar, me avisa.","Let me know when you get here.","Quando você chegar, avise-me."],["Se cê quiser, te ajudo.","If you want, I’ll help.","Se você quiser, eu ajudo você."],["Quando eu for pro Brasil, quero ir pra Bahia.","When I go to Brazil, I want to go to Bahia.","Quando eu for ao Brasil, quero ir à Bahia."],["Assim que puder, te respondo.","I’ll reply as soon as I can."],["Faz o que cê achar melhor.","Do whatever you think’s best.","Faça o que você achar melhor."],["Se Deus quiser!","God willing!"],["Se eu fosse você, aceitava.","If I were you, I’d take it.","Se eu fosse você, eu aceitaria."],["Se eu soubesse, tinha te falado.","If I’d known, I’d have told you.","Se eu soubesse, teria lhe dito."],["Eu ia, mas tô sem tempo.","I’d go, but I’m short on time.","Eu iria, mas não tenho tempo."]]},
+{t:"Viagem",items:[["Quero muito conhecer o Nordeste.","I really want to see the Northeast."],["Que horas é o check-in?","What time’s check-in?","A partir de que horas é o check-in?"],["Cês têm wi-fi?","You guys got wi-fi?","Vocês têm wi-fi?"],["Essa área é tranquila à noite?","Is this area OK at night?","Essa região é segura à noite?"],["Perdi o voo, acredita?","I missed my flight, can you believe it?"],["Tenho reserva no nome de Ezra.","I’ve got a booking under Ezra.","Tenho uma reserva em nome de Ezra."],["Qual praia cê indica?","Which beach would you recommend?","Que praia você recomenda?"],["Tô amando o Brasil!","I’m loving Brazil!","Estou adorando o Brasil."],["Quanto dá até o centro?","How much to the centre?"],["Pode me deixar aqui mesmo.","You can drop me right here."]]},
+{t:"Sobreviver na conversa",items:[["Peraí, deixa eu pensar…","Hang on, let me think…","Espere, deixe-me pensar."],["Como fala “deadline” em português?","How do you say “deadline” in Portuguese?","Como se diz “deadline” em português?"],["Que que é isso?","What’s that?","O que é isso?"],["Entendo mais do que falo.","I understand more than I speak."],["Pode me corrigir, tá?","Feel free to correct me, OK?"],["Tô aprendendo faz poucos meses.","I’ve only been learning a few months.","Estou aprendendo há poucos meses."],["Tem um jeito mais natural de falar isso?","Is there a more natural way to say that?"],["Me deu um branco.","My mind’s gone blank."],["Como assim?","What do you mean?","O que você quer dizer?"],["Repete? Não peguei.","Say again? Didn’t catch that.","Pode repetir? Não entendi."]]}
+];
+
+const RUA=[
+{id:"rua-contracoes",rua:true,t:"Fala de rua: cê, tá, pra, né",ex:`<p>Spoken Brazilian squashes the most common words. These aren’t slang or lazy speech; they’re how almost everyone talks, including on TV. Full forms are for emails and formal writing.</p><ul><li>você → <em>cê</em>, está → <em>tá</em>, estou → <em>tô</em>, estava → <em>tava</em></li><li>para → <em>pra</em>, para o → <em>pro</em>, vamos → <em>vamo</em> or <em>bora</em></li><li>não é? → <em>né?</em> (the tag on half of all sentences)</li><li>espera aí → <em>peraí</em>, onde está → <em>cadê</em></li></ul>`,d:[["Most natural way to say “Você está bem?”",["Cê tá bem?","Você está bem?","Tu estás bem?"],0,"You OK?"],["Most natural: “Eu estou chegando.”",["Estou a chegar.","Tô chegando.","Eu chego."],1,"I’m nearly there."],["Most natural: “Vamos para o bar?”",["Vamo pro bar?","Vamos ao bar?","Iremos ao bar?"],0,"Shall we go to the bar?"],["Most natural: “Eu estava dormindo.”",["Eu estive dormindo.","Tava dormindo.","Eu dormia-me."],1,"I was asleep."],["“Tá quente, ___?” (isn’t it?)",["né","não","sim"],0,"It’s hot, isn’t it?"],["Most natural: “Onde está meu celular?”",["Cadê meu celular?","Onde está o meu telemóvel?","Meu celular, onde ele está?"],0,"Where’s my phone?"]]},
+{id:"rua-gramatica",rua:true,t:"Fala de rua: a gente, tem, me ajuda",ex:`<p>Five grammar habits that instantly make you sound Brazilian rather than textbook:</p><ul><li><em>a gente</em> + singular verb for “we”: a gente <em>vai</em>, not nós vamos.</li><li><em>tem</em> for “there is”: <em>tem</em> festa hoje, not há.</li><li>Pronoun first, even to start a sentence: <em>Me</em> ajuda? <em>Te</em> ligo depois.</li><li><em>ele/ela</em> as the object: vi <em>ele</em>, not eu o vi.</li><li>Drop the object and subject when obvious: — Comprou o ingresso? — <em>Comprei.</em></li></ul>`,d:[["Most natural: “We’re going to the beach.”",["Nós iremos à praia.","A gente vai pra praia.","A gente vamos pra praia."],1,""],["Most natural: “There’s a party today.”",["Há uma festa hoje.","Tem festa hoje.","Existe uma festa hoje."],1,""],["Most natural: “Help me here?”",["Ajude-me aqui?","Me ajuda aqui?","Ajuda-me aqui?"],1,""],["Most natural: “I saw him yesterday.”",["Eu o vi ontem.","Vi ele ontem.","Eu vi-o ontem."],1,""],["“Cê comprou o ingresso?” Most natural “Yes, I did”:",["Sim, eu o comprei.","Comprei, sim.","Sim, comprei-o."],1,"Did you buy the ticket? Yeah, I did."],["Most natural: “We were talking about you.”",["Nós estávamos a falar de ti.","A gente tava falando de você.","Nós falávamos sobre você."],1,""]]},
+{id:"rua-reagir",rua:true,t:"Fala de rua: responder e reagir",ex:`<p>Brazilians rarely answer with a bare <em>sim</em>. They repeat the verb: — Quer? — <em>Quero.</em> — Tem? — <em>Tenho, sim.</em> A double negative softens a no: <em>Sei não</em>, <em>Não tenho, não</em>.</p><p>Conversation is full of reactions. Use them constantly, or you’ll seem cold:</p><ul><li><em>Nossa!</em> wow, <em>Sério? / Jura?</em> really?, <em>Mentira!</em> no way!</li><li><em>Pois é</em> I know, right; <em>É mesmo?</em> oh really?; <em>Uhum</em> yeah</li><li><em>Putz</em> ugh, <em>Que massa!</em> awesome, <em>Que isso!</em> come on!</li><li><em>Imagina</em> = don’t mention it (better than de nada with friends)</li></ul>`,d:[["“Cê quer um café?” Most natural “Yes”:",["Sim.","Quero, sim.","Afirmativo."],1,"Want a coffee? Yes please."],["“Cê tem irmão?” Most natural “No”:",["Não tenho, não.","Negativo.","Não possuo."],0,"Got any brothers? No, I don’t."],["Friend: “Fui promovido!” You react:",["Nossa, que massa! Parabéns!","Interessante.","Sim, eu entendo."],0,"I got promoted! Wow, amazing! Congrats!"],["Friend: “Perdi o voo ontem.” You react:",["Que bom!","Putz, sério?","Pois é."],1,"I missed my flight yesterday. Ugh, seriously?"],["Someone thanks you for a favour. Reply:",["Imagina!","Obrigado também.","Por nada, senhor."],0,"Don’t mention it!"],["Friend: “Esse trânsito tá um inferno.” You agree:",["Pois é, né?","Concordo com sua afirmação.","Que massa!"],0,"This traffic is hell. I know, right?"]]},
+{id:"rua-muletas",rua:true,t:"Fala de rua: muletas, pedidos e -inho",ex:`<p><em>Fillers</em> buy you thinking time and make you sound fluent even while you search for words: então, tipo, tipo assim, aí, sabe?, é que, na real, enfim, peraí, deixa eu pensar.</p><p><em>Requests</em> among normal people: <em>Me vê</em> um café? <em>Me dá</em>…? <em>Dá pra</em>…? <em>Tem como</em>…? <em>Será que</em>…? “Você poderia, por favor” is polite but stiff with friends or at a padaria.</p><p><em>Diminutives</em> soften and sound friendly: rapidinho, um minutinho, pertinho, cafezinho.</p>`,d:[["Ordering at a padaria:",["Eu desejo um café.","Me vê um café?","Dê-me um café."],1,"Can I get a coffee?"],["Asking a friend: “Can you help me quickly?”",["Cê pode me ajudar rapidinho?","Poderia o senhor ajudar-me?","Ajuda-me rapidamente."],0,""],["You need a second to think. Say:",["Aguarde.","Peraí, deixa eu pensar…","Um momento enquanto penso."],1,"Hang on, let me think…"],["Most natural: “Any way to send it today?”",["Tem como mandar hoje?","É possível enviar hoje?","Existe a possibilidade de envio hoje?"],0,""],["“Just a sec!”",["Só um minutinho!","Um minuto exato!","Aguarde um momento."],0,""],["Telling a story: “Then he said…”",["Aí ele falou…","Destarte ele disse…","Posteriormente ele disse…"],0,""]]},
+{id:"rua-girias",rua:true,t:"Fala de rua: gírias essenciais",ex:`<p>Safe, everyday slang you’ll hear constantly, mostly São Paulo flavoured:</p><ul><li><em>beleza / blz</em> alright, <em>de boa</em> chill, <em>fechou</em> deal</li><li><em>cara / mano</em> mate / bro, <em>galera</em> everyone</li><li><em>rolar</em> to happen (vai rolar festa), <em>zoar</em> to mess about</li><li><em>partiu</em> let’s go to…, <em>sextou</em> it’s Friday, <em>tamo junto</em> got your back</li><li><em>trampo</em> work, <em>mó</em> really (mó legal), <em>falou</em> later</li></ul><p>Regional: Rio says <em>mermão</em> and <em>bolado</em>; the Northeast says <em>oxe</em> and <em>massa</em>.</p>`,d:[["“Cool, deal!”",["Beleza, fechou!","Muito bem, acordado!","Ok, contrato!"],0,""],["“There’s a party happening Saturday.”",["Vai rolar uma festa sábado.","Haverá uma festa no sábado.","Vai ter festejo sábado."],0,""],["Your sparring partner lands a clean combo. Say:",["Mandou bem!","Fez corretamente!","Bom trabalho realizado!"],0,"Nice one!"],["Saying bye casually:",["Falou, até mais!","Adeus.","Passar bem."],0,"Later!"],["“I’m chilling.”",["Tô de boa.","Estou relaxando-me.","Estou tranquilizado."],0,""],["In São Paulo, “Vou pro trampo” means:",["I’m off to work","I’m getting the tram","I’m in trouble"],0,""]]}
+];
+
+const GRAMMAR=RUA.concat([
+{id:"ser-estar",t:"Ser vs estar",ex:`<p><em>Ser</em> is for what something <i>is</i>: identity, job, origin, characteristics, time, events. <em>Estar</em> is for how or where something is right now: feelings, conditions, location of people and things.</p><ul><li>Eu <em>sou</em> de Londres. (origin)</li><li>Eu <em>estou</em> cansado. (current state)</li><li>A festa <em>é</em> no sábado. (events use ser)</li></ul><p>Present forms: sou, é, somos, são / estou, está, estamos, estão. In speech, <em>estou</em> becomes <em>tô</em> and <em>está</em> becomes <em>tá</em>.</p>`,d:[["Eu ___ inglês.",["sou","estou","é"],0,"I’m English."],["Hoje eu ___ cansado.",["sou","estou","está"],1,"I’m tired today."],["A festa ___ no sábado.",["é","está","são"],0,"The party is on Saturday."],["O restaurante ___ fechado agora.",["é","está","são"],1,"The restaurant is closed now."],["Ela ___ médica.",["está","é","estou"],1,"She’s a doctor."],["Nós ___ atrasados.",["somos","estamos","são"],1,"We’re late."]]},
+{id:"presente",t:"Present tense",ex:`<p>Drop -ar/-er/-ir and add the ending. Brazilians mostly use <em>você</em> (you) and <em>a gente</em> (we), which both take the same form as ele/ela, so you only need four forms day to day.</p><ul><li>falar: eu fal<em>o</em>, você/ele/a gente fal<em>a</em>, nós fal<em>amos</em>, eles fal<em>am</em></li><li>comer: com<em>o</em>, com<em>e</em>, com<em>emos</em>, com<em>em</em></li><li>abrir: abr<em>o</em>, abr<em>e</em>, abr<em>imos</em>, abr<em>em</em></li></ul>`,d:[["Eu ___ português todo dia.",["estudo","estuda","estudamos"],0,"I study Portuguese every day."],["Você ___ onde?",["moro","mora","moram"],1,"Where do you live?"],["A gente ___ pizza às sextas.",["come","comemos","comem"],0,"We eat pizza on Fridays."],["Eles ___ muito.",["trabalha","trabalho","trabalham"],2,"They work a lot."],["Nós ___ a loja cedo.",["abrimos","abre","abrem"],0,"We open the shop early."],["Ele não ___ carne.",["como","come","comem"],1,"He doesn’t eat meat."]]},
+{id:"irregulares",t:"Key irregular verbs",ex:`<p>The verbs you’ll use most are irregular. Learn them as chunks.</p><ul><li>ter: tenho, tem, temos, têm</li><li>ir: vou, vai, vamos, vão</li><li>fazer: faço, faz, fazemos, fazem</li><li>poder: posso, pode, podemos, podem</li><li>querer: quero, quer, queremos, querem</li><li>ver: vejo, vê, vemos, veem</li></ul>`,d:[["Eu ___ dois irmãos.",["tem","tenho","temos"],1,"I have two brothers."],["Você ___ me ajudar?",["posso","pode","podem"],1,"Can you help me?"],["Eu ___ ao mercado agora.",["vai","vou","vamos"],1,"I’m going to the shop now."],["O que você ___ no fim de semana?",["faço","faz","fazem"],1,"What do you do at the weekend?"],["Eles ___ sair.",["quer","querem","quero"],1,"They want to go out."],["Eu não ___ nada.",["vejo","vê","vemos"],0,"I can’t see anything."]]},
+{id:"contracoes",t:"Contractions: no, na, do, da, pelo",ex:`<p>Prepositions merge with articles. This happens in almost every sentence.</p><ul><li>em + o/a = <em>no / na</em> (in/on the)</li><li>de + o/a = <em>do / da</em> (of/from the)</li><li>por + o/a = <em>pelo / pela</em> (through/by the)</li><li>a + a = <em>à</em> (to the)</li></ul><p>Most city names take no article: <em>em</em> Londres, <em>de</em> São Paulo. Countries usually do: <em>no</em> Brasil, <em>da</em> Inglaterra.</p>`,d:[["Eu moro ___ Londres.",["em","no","na"],0,"I live in London."],["Ele está ___ escritório.",["na","no","em o"],1,"He’s at the office."],["Esse livro é ___ Maria.",["do","de a","da"],2,"This book is Maria’s."],["Ela é ___ Brasil.",["de","do","da"],1,"She’s from Brazil."],["Passei ___ centro.",["pelo","pela","no"],0,"I went through the centre."],["O celular está ___ mesa.",["no","na","da"],1,"The phone is on the table."]]},
+{id:"gerundio",t:"Estar + -ndo and ir + infinitive",ex:`<p><em>Estar + gerund</em> is what’s happening now: estou trabalha<em>ndo</em>, está come<em>ndo</em>, estamos dormi<em>ndo</em>.</p><p><em>Ir + infinitive</em> is the everyday future. Brazilians rarely use the formal future tense in speech: vou <em>viajar</em>, vai <em>chover</em>.</p>`,d:[["Agora eu ___ trabalhando.",["sou","estou","vou"],1,"I’m working now."],["O que você está ___?",["fazer","fazendo","faz"],1,"What are you doing?"],["Amanhã eu ___ viajar.",["estou","vou","vai"],1,"Tomorrow I’m going to travel."],["A gente vai ___ mais tarde.",["comer","comendo","come"],0,"We’re going to eat later."],["Ela está ___ no telefone.",["falar","falando","fala"],1,"She’s on the phone."],["Vai ___ hoje?",["chover","chovendo","chove"],0,"Is it going to rain today?"]]},
+{id:"perfeito",t:"Past: pretérito perfeito",ex:`<p>Finished actions at a specific moment.</p><ul><li>falar: fal<em>ei</em>, fal<em>ou</em>, fal<em>amos</em>, fal<em>aram</em></li><li>comer: com<em>i</em>, com<em>eu</em>, com<em>emos</em>, com<em>eram</em></li><li>sair: sa<em>í</em>, sa<em>iu</em>, sa<em>ímos</em>, sa<em>íram</em></li></ul><p>Must-know irregulars: fui (I went / I was), fez, tive, disse, vi, pude. <em>Ir</em> and <em>ser</em> share the same past forms.</p>`,d:[["Ontem eu ___ muito.",["trabalho","trabalhei","trabalhava"],1,"I worked a lot yesterday."],["Você ___ o filme?",["viu","vê","vi"],0,"Did you see the film?"],["A gente ___ cedo.",["saiu","saímos","saíram"],0,"We left early."],["Eles ___ tudo.",["comeu","comeram","comemos"],1,"They ate everything."],["Eu ___ ao Brasil em 2019.",["vou","fui","ia"],1,"I went to Brazil in 2019."],["Ela ___ que não vinha.",["disse","dizia","diz"],0,"She said she wasn’t coming."]]},
+{id:"imperfeito",t:"Imperfeito vs perfeito",ex:`<p><em>Imperfeito</em> sets the scene: habits (used to), background, ongoing states. <em>Perfeito</em> moves the story: single completed events.</p><ul><li>-ar: fal<em>ava</em>, fal<em>ava</em>, fal<em>ávamos</em>, fal<em>avam</em></li><li>-er/-ir: com<em>ia</em>, com<em>ia</em>, com<em>íamos</em>, com<em>iam</em></li><li>Irregular: era (ser), tinha (ter), ia (ir), estava</li></ul><p>Eu <em>estava</em> dormindo (scene) quando você <em>ligou</em> (event).</p>`,d:[["Quando eu era criança, eu ___ muito.",["brinquei","brincava","brinco"],1,"When I was a kid, I used to play a lot."],["Eu ___ dormindo quando ele ligou.",["estive","estava","estou"],1,"I was sleeping when he called."],["Ontem eu ___ às sete.",["acordei","acordava","acordo"],0,"Yesterday I woke up at seven."],["Antigamente a gente ___ à praia todo verão.",["foi","ia","vai"],1,"We used to go to the beach every summer."],["Ele ___ cansado, então foi embora.",["esteve","estava","está"],1,"He was tired, so he left."],["De repente, o telefone ___.",["tocava","tocou","toca"],1,"Suddenly, the phone rang."]]},
+{id:"pronomes",t:"Object pronouns, Brazilian style",ex:`<p>Spoken Brazilian Portuguese puts object pronouns <em>before</em> the verb, even at the start of a sentence: <em>Me</em> ajuda? <em>Te</em> ligo amanhã.</p><p>For “him/her/them”, speech uses <em>ele, ela, eles</em> after the verb: Eu vi <em>ele</em>. Textbooks teach <em>o/a</em> (eu o vi), which you’ll see in writing.</p><p><em>Te</em> is used as the object form for você in casual speech.</p>`,d:[["Eu ___ ligo amanhã.",["te","você","lhe"],0,"I’ll call you tomorrow."],["Eu vi ___ no parque. (him)",["lhe","ele","se"],1,"I saw him in the park."],["___ passa o sal?",["Me","Mim","Eu"],0,"Can you pass me the salt?"],["Ela ___ conhece. (me)",["mim","me","eu"],1,"She knows me."],["Você pode ___ ajudar?",["me","mim","eu"],0,"Can you help me?"],["Eu já ___ disse isso.",["você","te","tu"],1,"I already told you that."]]},
+{id:"por-para",t:"Por vs para",ex:`<p><em>Para</em> (spoken <em>pra</em>) points to a goal: destination, purpose, recipient, deadline. <em>Por</em> is about the path or cause: through, by, for (in exchange), because of, per.</p><ul><li>Esse presente é <em>para</em> você. Estudo <em>para</em> falar melhor.</li><li>Obrigado <em>por</em> tudo. Paguei 50 reais <em>por</em> isso. Passei <em>pela</em> praia.</li></ul>`,d:[["Obrigado ___ tudo.",["por","para","pra"],0,"Thanks for everything."],["Esse presente é ___ você.",["por","para","pelo"],1,"This present is for you."],["Eu vou ___ o Brasil em janeiro.",["por","pelo","para"],2,"I’m going to Brazil in January."],["Passamos ___ praia.",["para a","pela","pelo"],1,"We went past the beach."],["Estudo ___ falar melhor.",["por","para","pela"],1,"I study to speak better."],["Paguei cinquenta reais ___ isso.",["por","para","pra"],0,"I paid fifty reais for this."]]},
+{id:"comparacoes",t:"Comparisons",ex:`<p><em>mais … (do) que</em> = more … than; <em>menos … (do) que</em> = less … than; <em>tão … quanto</em> = as … as.</p><p>Irregulars: bom → <em>melhor</em>, ruim → <em>pior</em>, grande → <em>maior</em>, pequeno → <em>menor</em>. Superlative: o melhor restaurante <em>da</em> cidade.</p>`,d:[["Esse é ___ que aquele. (better)",["mais bom","melhor","bem"],1,"This one is better than that one."],["Hoje está ___ que ontem. (worse)",["pior","mais ruim","mal"],0,"Today is worse than yesterday."],["Ele é tão alto ___ eu.",["que","como","quanto"],2,"He’s as tall as me."],["São Paulo é ___ que Londres.",["mais grande","maior","grandíssimo"],1,"São Paulo is bigger than London."],["É o melhor bar ___ cidade.",["na","da","de"],1,"It’s the best bar in the city."],["Português é mais fácil ___ eu pensava.",["do que","como","de"],0,"Portuguese is easier than I thought."]]},
+{id:"subjuntivo",t:"Present subjunctive",ex:`<p>Used after wishes, doubts, emotions and some conjunctions: espero que, quero que, talvez, tomara que, é importante que, duvido que, para que, antes que, caso.</p><p>Take the eu form of the present, drop -o, and swap the vowel: fal<em>o</em> → fal<em>e</em>; com<em>o</em> → com<em>a</em>; tenh<em>o</em> → tenh<em>a</em>.</p><p>Irregulars: seja (ser), esteja (estar), vá (ir), saiba (saber), queira (querer), dê (dar), faça (fazer).</p>`,d:[["Espero que você ___ bem.",["está","esteja","estar"],1,"I hope you’re well."],["Quero que ele ___.",["vem","venha","vir"],1,"I want him to come."],["Talvez a gente ___ amanhã.",["vai","vá","ir"],1,"Maybe we’ll go tomorrow."],["Tomara que ___ sol!",["faz","faça","fazer"],1,"Let’s hope it’s sunny!"],["É importante que você ___ todo dia.",["pratica","pratique","praticar"],1,"It’s important that you practise every day."],["Duvido que ela ___.",["sabe","saiba","saber"],1,"I doubt she knows."]]},
+{id:"futuro-subj",t:"Se and quando: future subjunctive",ex:`<p>After <em>se</em> (if), <em>quando</em> (when), <em>assim que</em> (as soon as) and <em>enquanto</em> (while) about the future, Portuguese uses the future subjunctive. It sounds advanced but you need it daily.</p><p>Take the eles form of the past (fala<em>ram</em>, tive<em>ram</em>, fo<em>ram</em>), drop -am: falar, tiver, for. Others: puder, quiser, der, fizer, estiver, souber.</p><p><em>Se eu tiver tempo, eu vou.</em> If I have time, I’ll go.</p>`,d:[["Se eu ___ tempo, eu vou.",["tenho","tiver","tivesse"],1,"If I have time, I’ll go."],["Quando você ___, me liga.",["chega","chegar","chegue"],1,"When you arrive, call me."],["Se você ___, a gente sai.",["quer","quiser","queira"],1,"If you want, we’ll go out."],["Assim que eu ___, te respondo.",["posso","puder","possa"],1,"As soon as I can, I’ll reply."],["Quando eu ___ ao Brasil, vou para a Bahia.",["vou","for","vá"],1,"When I go to Brazil, I’ll go to Bahia."],["Se ___ certo, ótimo.",["dá","der","dê"],1,"If it works out, great."]]},
+{id:"condicional",t:"Hypotheticals: would and if I were",ex:`<p><em>Conditional</em> (would): infinitive + -ia: falar<em>ia</em>, gostar<em>ia</em>, poder<em>ia</em>. Irregular: faria, diria, traria. In speech, the imperfeito often replaces it: <em>eu ia</em> = I would go.</p><p><em>Imperfect subjunctive</em> (if I were / had): take the eles past, drop -ram, add -sse: fosse, tivesse, soubesse, pudesse.</p><p><em>Se eu fosse você, eu aceitaria.</em></p>`,d:[["Se eu ___ rico, compraria uma casa.",["sou","fosse","for"],1,"If I were rich, I’d buy a house."],["Eu ___ de um café, por favor.",["gosto","gostaria","gostei"],1,"I’d like a coffee, please."],["Se eu ___, eu te falaria.",["sei","soubesse","souber"],1,"If I knew, I’d tell you."],["O que você ___ no meu lugar?",["faz","faria","fará"],1,"What would you do in my place?"],["Se a gente ___ mais tempo…",["tem","tivesse","tiver"],1,"If we had more time…"],["Você ___ me ajudar?",["poderia","pode ser","podia ser"],0,"Could you help me?"]]}
+]);
+
+const DIALOGUES=[{t:"Na padaria",d:"Ordering breakfast like a local",l:[["Bom dia! Vai querer o quê?","Morning! What’ll it be?"],["Bom dia! Me vê um pão de queijo e um pingado?","Morning! Can I get a cheese bread and a coffee with a dash of milk?"],["Pequeno ou grande?","Small or large?"],["Grande. Quanto que dá?","Large. How much is that?"],["Dá doze reais.","Twelve reais."],["Aceita cartão?","Card OK?"],["Aceito, sim. Débito ou crédito?","Sure. Debit or credit?"],["Débito. Valeu!","Debit. Cheers!"],["Imagina, bom dia!","No problem, have a good one!"]]},
+{t:"Conhecendo alguém",d:"Meeting a friend of a friend",l:[["Oi! Cê é amigo da Carol?","Hi! Are you Carol’s friend?"],["Sou, sim! A gente trabalhou junto. E você?","Yeah! We used to work together. And you?"],["Sou prima dela. Cê não é daqui, né?","I’m her cousin. You’re not from here, are you?"],["Não, sou de Londres. Tô aprendendo português.","No, I’m from London. I’m learning Portuguese."],["Jura? Cê fala superbem!","No way! You speak really well!"],["Imagina! Ainda tô aprendendo, mas tô curtindo muito.","Nah! Still learning, but I’m loving it."],["Faz quanto tempo que cê estuda?","How long have you been studying?"],["Faz uns três meses, por aí.","About three months, give or take."],["Nossa, mandou bem!","Wow, nice one!"]]},
+{t:"No Uber",d:"Small talk with a driver",l:[["Boa tarde! Ezra?","Afternoon! Ezra?"],["Isso! Boa tarde.","That’s me! Afternoon."],["Avenida Paulista, né?","Avenida Paulista, right?"],["Isso. Vai demorar muito?","Yeah. Will it take long?"],["Com esse trânsito, uns vinte minutinhos.","With this traffic, twenty-odd minutes."],["Tranquilo. Dá pra ligar o ar?","No worries. Could you put the AC on?"],["Claro! Tá bom assim?","Sure! That OK?"],["Perfeito, valeu!","Perfect, thanks!"],["E cê é de onde, hein?","So where are you from?"],["De Londres. Mas tô amando São Paulo.","London. But I’m loving São Paulo."]]},
+{t:"No trampo",d:"Catching up with a colleague",l:[["E aí, conseguiu fechar a análise?","Hey, did you manage to wrap up the analysis?"],["Quase. Só falta dar uma revisada nos números de outubro.","Nearly. Just need to go over the October numbers."],["Os preços continuaram subindo?","Did prices keep rising?"],["Subiram um pouco, mas as vendas caíram bastante.","Up a bit, but sales dropped quite a lot."],["Interessante. Dá pra mandar até sexta?","Interesting. Can you send it by Friday?"],["Dá, sim. Amanhã cedo te mando.","Yeah. I’ll send it first thing tomorrow."],["Show! Valeu, cara.","Great! Cheers, mate."]]},
+{t:"Na academia",d:"Coaching a leg session",l:[["Bora começar o aquecimento?","Shall we start the warm-up?"],["Bora! Hoje é o quê?","Let’s go! What’s today?"],["Hoje é perna. Três séries de agachamento.","Legs today. Three sets of squats."],["Nossa, tô todo dolorido do treino de ontem.","Ugh, I’m sore all over from yesterday."],["Normal. Segura as costas retas e desce devagarinho.","That’s normal. Keep your back straight and go down nice and slow."],["Assim tá certo?","Like this?"],["Isso! Mais duas. Cê consegue!","That’s it! Two more. You’ve got this!"],["Ufa! Mandei bem?","Phew! Did I do OK?"],["Mandou muito bem!","You smashed it!"]]},
+{t:"Rolê de sábado",d:"Making weekend plans",l:[["Cê vai fazer o quê no sábado?","What are you up to Saturday?"],["Sei lá, nada ainda. Por quê?","Dunno, nothing yet. Why?"],["Vai rolar um samba lá na Lapa. Bora?","There’s a samba thing in Lapa. You in?"],["Bora! Começa que horas?","I’m in! What time does it start?"],["Lá pelas nove. A gente pode comer alguma coisa antes.","Around nine. We could grab food first."],["Fechou. Me manda o endereço no zap.","Sorted. Send me the address on WhatsApp."],["Mando, sim. Falou!","Will do. Later!"]]},
+{t:"Fofoca",d:"Hearing some gossip",l:[["Cê não vai acreditar.","You’re not gonna believe this."],["Que foi? Conta!","What happened? Spill!"],["O Lucas e a Ju terminaram.","Lucas and Ju broke up."],["Mentira! Sério?","No way! Seriously?"],["Sério. Ela me contou ontem.","Seriously. She told me yesterday."],["Nossa, mas eles pareciam tão de boa.","Wow, but they seemed so happy."],["Pois é. Tipo, ninguém esperava.","I know. Like, no one saw it coming."],["Putz, coitado do Lucas.","Ugh, poor Lucas."]]},
+{t:"No boteco",d:"One more round with friends",l:[["Desce mais uma?","Another round?"],["Bora! Mas essa é a saideira, hein.","Go on! But this is the last one, yeah?"],["Cê fala isso toda vez, cara.","You say that every time, mate."],["Hoje é sério, amanhã eu trampo cedo.","I mean it today, I’m working early tomorrow."],["Tá bom, tá bom. Vamo rachar a conta?","Alright, alright. Shall we split the bill?"],["Fechou. Passa a maquininha aqui?","Deal. Pass the card machine over?"],["Tá aqui. Valeu, galera!","Here you go. Cheers, everyone!"]]}
+];
+
+const SOUNDS=[
+["cê tá, cê vai","Você está collapses to cê tá. This is the speed you need to recognise."],
+["pra, pro, pros","Para becomes pra; para o becomes pro."],
+["né?","Não é? squashed into one syllable."],
+["tô, tava, peraí, bora","Estou to tô; estava to tava; espera aí to peraí; vamos embora to bora."],
+["de novo, de verdade","Unstressed de sounds like dji: dji novu, dji verdadji."],
+["dia, tia, leite","D and T before an i-sound become “dj” and “tch”: djia, tchia, leitchi."],
+["rua, carro, Rio","R at the start of a word and RR sound like the English h: hua, kah-hu, Hiu."],
+["caro, para","A single R between vowels is a quick tap, like the tt in American “better”."],
+["leite, cidade, todo","Unstressed final E sounds like i, final O like u: leitchi, cidadji, todu."],
+["Brasil, mal, final","L at the end of a syllable sounds like w: Brasiu, mau."],
+["pão, mãe, bem, não","Nasal vowels: let air through your nose. ão is like “ow” said through the nose."],
+["filho, trabalho","LH is like the lli in “million”."],
+["banho, amanhã","NH is like the ny in “canyon”."],
+["avó, avô","Open ó (like “law”) vs closed ô (like “go” without the glide) change meaning."]
+];
+const PAIRS=[["avó","avô","grandma","grandpa"],["vovó","vovô","granny","grandad"],["pão","pau","bread","stick"],["mão","mau","hand","bad"],["caro","carro","expensive","car"],["era","erra","was","makes a mistake"],["fala","falha","speaks","fails"],["sono","sonho","sleep","dream"],["lá","lã","there","wool"],["pais","país","parents","country"],["sem","se","without","if"],["mora","morra","lives","dies"]];
+
+const SCENARIOS=[
+{id:"livre",t:"Papo livre",d:"Chat about anything: your week, plans, interests.",p:"Free conversation. Ask about his week, work, training and plans. Keep topics varied."},
+{id:"padaria",t:"Na padaria",d:"Order breakfast and pay.",p:"You work the counter at a busy padaria in São Paulo. He is a customer ordering breakfast and paying."},
+{id:"uber",t:"No Uber",d:"Small talk with a chatty driver.",p:"You are a friendly Uber driver in São Paulo making small talk: where he’s from, why he’s in Brazil, recommendations."},
+{id:"bar",t:"Conhecendo alguém",d:"Meet someone new at a bar.",p:"You just met him at a friend’s birthday at a bar. Get to know him: where he’s from, what he does, why he’s learning Portuguese."},
+{id:"academia",t:"Na academia",d:"Talk training and boxing.",p:"You are a gym member in Brazil chatting with him; he is a personal trainer and boxer. Talk training, technique, routines and boxing."},
+{id:"trabalho",t:"No trabalho",d:"Talk property data with a colleague.",p:"You are a Brazilian colleague at a real estate consultancy. Discuss market data, house prices, reports, deadlines and his move into AI engineering."},
+{id:"zap",t:"No zap",d:"Text like a Brazilian: vc, tb, kkkk.",p:"You are texting him on WhatsApp like a real Brazilian friend: short lowercase messages, abbreviations (vc, tb, pq, blz, msm, kkkk, rs), very casual. Make plans for the weekend and chat about your days."},
+{id:"diario",t:"Diário",d:"Write about your day; get full corrections.",p:"Daily journal. Open with one short question about his day. When he writes, give a warm reaction and one follow-up question in reply, and in correction rewrite his full message naturally."}
+];
+const TOPICS=["Fofoca","Reclamar do dia","Paquera","Futebol","Comida de boteco","Trampo e chefe","Treino e academia","Rolê de fim de semana","Dinheiro e contas","Tecnologia e IA","Família","Viagem pelo Brasil"];
+const PHASES=[
+{n:"Base",from:"2026-10-26",to:"2026-11-15",f:"Spoken forms from day one: cê, tá, pra, a gente. The five Fala de rua topics, the first 500 words, present tense. Short chats with Bia daily, even if clumsy."},
+{n:"Construção",from:"2026-11-16",to:"2026-12-13",f:"Both past tenses, 1,000+ words, a shadowing dialogue every day, a conversation every day."},
+{n:"Expansão",from:"2026-12-14",to:"2027-01-10",f:"Subjunctive and if/when clauses. Watch Brazilian series with Portuguese subtitles. Start real tutor sessions."},
+{n:"Sprint",from:"2027-01-11",to:"2027-01-30",f:"Speaking first: long conversations, 3 tutor sessions a week, native content without subtitles."}
+];
+
+/* ================= STATE ================= */
+const KEY="fala-v1", DAY=864e5, END=new Date(2027,0,30).getTime();
+function defaults(){return {v:1,updated:0,cards:{},ai:[],newPerDay:20,target:90,rate:0.95,voice:"",theme:"auto",autoplay:true,apiKey:"",log:{},gram:{}};}
+function load(){try{const s=JSON.parse(localStorage.getItem(KEY)||"null");if(s&&s.v){Object.keys(s.cards||{}).forEach(k=>{if(/^u\d/.test(k))delete s.cards[k];});return Object.assign(defaults(),s);}}catch(e){}return defaults();}
+let S=load();
+const $=(s,el=document)=>el.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+function dkey(d=new Date()){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
+function midnight(d=new Date()){const x=new Date(d);x.setHours(0,0,0,0);return x.getTime();}
+function daysLeft(){return Math.max(0,Math.round((END-midnight())/DAY));}
+function L(k=dkey()){return S.log[k]||(S.log[k]={sec:0,rev:0,nw:0,bonus:0,shadow:0,chat:0,gram:0,imm:0});}
+let saveT=null;
+function save(){S.updated=Date.now();try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}syncSoon();}
+function saveSoon(){clearTimeout(saveT);saveT=setTimeout(save,700);}
+function toast(t){const el=$("#toast");el.textContent=t;el.classList.add("on");clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove("on"),2600);}
+function applyTheme(){if(S.theme==="auto")document.documentElement.removeAttribute("data-theme");else document.documentElement.dataset.theme=S.theme;}
+applyTheme();
+
+let NOTES=null;
+function allNotes(){
+  if(!NOTES){NOTES=[];UNITS.forEach((u,ui)=>u.items.forEach((it,ii)=>NOTES.push({id:"c"+ui+"-"+ii,pt:it[0],en:it[1],f:it[2]||"",u:u.t})));}
+  return NOTES.concat(S.ai);
+}
+function noteById(id){return allNotes().find(n=>n.id===id);}
+
+/* activity time */
+let lastAct=0, VIEW="today";
+function act(){const n=Date.now();if(lastAct&&n-lastAct<90000){L().sec+=(n-lastAct)/1000;saveSoon();}lastAct=n;}
+["pointerdown","keydown"].forEach(e=>document.addEventListener(e,act,true));
+
+/* ================= SYNC (account) ================= */
+let DB=null, UID=null, syncT=null, pushing=false, SYNC="Saved on this phone";
+function syncSoon(){if(!DB)return;clearTimeout(syncT);syncT=setTimeout(push,3500);}
+async function push(){
+  if(!DB||pushing)return;const body=JSON.stringify(S);if(body.length>240000){SYNC="This device (too large to sync)";return;}
+  pushing=true;try{await DB.doc("data/users/"+UID+"/progress").set({state:body,updated:S.updated});SYNC="Synced to your Claude account";}catch(e){SYNC="This device";}pushing=false;
+}
+(async()=>{
+  try{
+    if(!window.claude||!claude.use)return;
+    const [db,user]=await Promise.all([claude.use("db"),claude.use("user")]);
+    if(!db||!user)return;
+    UID=await user.id();DB=db;
+    const snap=await db.doc("data/users/"+UID+"/progress").get();
+    if(snap.exists){const d=snap.data();if(d&&d.state&&(d.updated||0)>(S.updated||0)){S=Object.assign(defaults(),JSON.parse(d.state));try{localStorage.setItem(KEY,d.state);}catch(e){}applyTheme();rerender();}}
+    SYNC="Synced to your Claude account";push();
+  }catch(e){}
+})();
+
+/* ================= CLAUDE (sample) ================= */
+let SAMPLE=null, SAMPLE_READY=true;
+function setupAI(){SAMPLE=S.apiKey?{json:apiJson}:null;}
+async function apiJson(prompt,opts={}){
+  const model=opts.modelTier==="quick"?"claude-haiku-5-5":"claude-sonnet-5-5";
+  let res;
+  try{res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"content-type":"application/json","x-api-key":S.apiKey,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model,max_tokens:2000,messages:[{role:"user",content:prompt}]})});}
+  catch(e){throw {code:"network"};}
+  if(res.status===401||res.status===403)throw {code:"bad_key"};
+  if(res.status===429||res.status===529)throw {code:"rate_limited"};
+  if(!res.ok)throw {code:"http",message:String(res.status)};
+  const data=await res.json();
+  const text=(data.content||[]).filter(b=>b.type==="text").map(b=>b.text).join("");
+  const clean=text.replace(/```json|```/g,"").trim();
+  const m=clean.match(/[\[{][\s\S]*[\]}]/);
+  try{return JSON.parse(m?m[0]:clean);}catch(e){throw {code:"bad"};}
+}
+setupAI();
+function aiError(e){
+  const c=e&&e.code;
+  if(c==="bad_key")return "Your API key was rejected. Check it in Progresso, Settings.";
+  if(c==="network")return "No connection. AI features need internet; everything else works offline.";
+  if(c==="rate_limited")return "Too many requests at once. Wait a minute, then try again.";
+  return "Claude didn’t answer. Check your connection and try again.";
+}
+
+/* ================= SPEECH ================= */
+let voices=[];
+function loadVoices(){try{voices=speechSynthesis.getVoices();}catch(e){}}
+if("speechSynthesis" in window){loadVoices();speechSynthesis.onvoiceschanged=()=>{loadVoices();if(VIEW==="progress")renderProgress();};}
+function ptVoices(){return voices.filter(v=>/^pt/i.test(v.lang));}
+function ptVoice(){if(S.voice){const v=voices.find(v=>v.name===S.voice);if(v)return v;}return voices.find(v=>/pt[-_]BR/i.test(v.lang))||voices.find(v=>/^pt/i.test(v.lang));}
+function enVoice(){return voices.find(v=>/en[-_]GB/i.test(v.lang))||voices.find(v=>/^en/i.test(v.lang));}
+function say(text,o={}){
+  return new Promise(res=>{
+    if(!("speechSynthesis" in window))return res();
+    const lang=o.lang||"pt";const u=new SpeechSynthesisUtterance(text);
+    const v=lang==="pt"?ptVoice():enVoice();if(v)u.voice=v;
+    u.lang=lang==="pt"?"pt-BR":"en-GB";u.rate=o.rate||(lang==="pt"?S.rate:1);
+    let done=false;const fin=()=>{if(!done){done=true;res();}};
+    u.onend=fin;u.onerror=fin;setTimeout(fin,text.length*140/u.rate+2500);
+    speechSynthesis.speak(u);
+  });
+}
+function hush(){try{speechSynthesis.cancel();}catch(e){}}
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+let REC=null;
+function startMic(onText,onEnd){
+  if(!SR)return;if(REC){try{REC.stop();}catch(e){}REC=null;return;}
+  try{const r=new SR();r.lang="pt-BR";r.interimResults=true;r.continuous=false;
+    r.onresult=e=>{let t="";for(const x of e.results)t+=x[0].transcript;onText(t);};
+    r.onerror=e=>{if(e.error==="not-allowed"||e.error==="service-not-allowed")toast("Microphone isn’t available here. Type instead.");};
+    r.onend=()=>{REC=null;onEnd&&onEnd();};r.start();REC=r;toast("Listening… speak in Portuguese");
+  }catch(e){toast("Microphone isn’t available here. Type instead.");}
+}
+const ICON={
+  play:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" stroke-linecap="round"/></svg>',
+  mic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>',
+  check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10"/></svg>',
+  send:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 12 20 4l-6 16-3-7z"/></svg>'
+};
+
+/* ================= SRS ================= */
+function fmtIvl(d){return d<1?"<10m":d<30?d+"d":Math.round(d/30)+"mo";}
+function nextState(c,r){
+  const n=Object.assign({},c);
+  if(!n.reps){
+    if(r<=2)return {n,requeue:true,label:"<10m"};
+    n.reps=1;n.ivl=r===4?4:1;
+  }else if(r===1){
+    n.lapses=(n.lapses||0)+1;n.ease=Math.max(1.3,n.ease-0.2);n.ivl=1;n.reps+=1;n.due=Date.now();
+    return {n,requeue:true,label:"<10m"};
+  }else{
+    const b=Math.max(1,n.ivl);
+    if(r===2){n.ease=Math.max(1.3,n.ease-0.15);n.ivl=Math.max(b+1,Math.round(b*1.2));}
+    if(r===3){n.ivl=Math.max(b+1,Math.round(b*n.ease));}
+    if(r===4){n.ease+=0.15;n.ivl=Math.max(b+2,Math.round(b*n.ease*1.3));}
+    n.reps+=1;
+  }
+  n.ivl=Math.min(n.ivl,40);n.due=midnight()+n.ivl*DAY+4*3600e3;
+  return {n,requeue:false,label:fmtIvl(n.ivl)};
+}
+function modeFor(c){if(!c||!c.reps||c.reps<2)return "listen";return c.reps%3===0?"audio":"produce";}
+function dueNotes(){const now=Date.now();return allNotes().filter(n=>{const c=S.cards[n.id];return c&&c.reps>0&&c.due<=now;}).sort((a,b)=>S.cards[a.id].due-S.cards[b.id].due);}
+function freshLeft(){const l=L();return Math.max(0,S.newPerDay+(l.bonus||0)-l.nw);}
+function freshNotes(k){return allNotes().filter(n=>!S.cards[n.id]).slice(0,k);}
+function learningNotes(){return allNotes().filter(n=>{const c=S.cards[n.id];return c&&!c.reps;});}
+
+const ST={queue:[],cur:null,revealed:false,typed:"",fb:null,built:false};
+function buildQueue(){
+  const due=dueNotes().map(n=>n.id), learn=learningNotes().map(n=>n.id), fresh=freshNotes(freshLeft()).map(n=>n.id);
+  const nw=learn.concat(fresh);const q=[];let i=0;
+  due.forEach((id,k)=>{q.push(id);if((k+1)%3===0&&i<nw.length)q.push(nw[i++]);});
+  while(i<nw.length)q.push(nw[i++]);
+  ST.queue=q;ST.cur=null;ST.revealed=false;ST.fb=null;ST.built=true;
+}
+function nextCard(){ST.cur=ST.queue.shift()||null;ST.revealed=false;ST.fb=null;ST.typed="";
+  if(ST.cur&&!S.cards[ST.cur]){S.cards[ST.cur]={reps:0,ivl:0,ease:2.5,due:0,lapses:0};L().nw++;saveSoon();}
+}
+
+/* answer checking */
+function norm(s){return s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9\s]/g," ").replace(/\s+/g," ").trim();}
+function strip(s){return s.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu," ").replace(/\s+/g," ").trim();}
+function check(typed,target){
+  if(!typed.trim())return null;
+  if(norm(typed)===norm(target))return {ok:true,accents:strip(typed)!==strip(target)};
+  const have=new Set(norm(typed).split(" "));
+  const words=target.split(/\s+/).map(w=>({w,hit:have.has(norm(w))}));
+  return {ok:false,pct:words.filter(x=>x.hit).length/words.length,words};
+}
+
+/* ================= RENDER: TODAY ================= */
+function curPhase(){const k=dkey();let idx=PHASES.findIndex(p=>k>=p.from&&k<=p.to);if(idx<0)idx=k<PHASES[0].from?0:PHASES.length-1;return idx;}
+function tickHTML(done){return `<span class="tick ${done?"done":""}">${done?ICON.check:""}</span>`;}
+function renderToday(){
+  const l=L(), due=dueNotes().length, ph=PHASES[curPhase()], mins=Math.round(l.sec/60), left=daysLeft();
+  const newDone=freshLeft()===0&&learningNotes().length===0;
+  $("#v-today").innerHTML=`
+  <svg class="wave" aria-hidden="true" preserveAspectRatio="none"><defs><pattern id="wv" width="64" height="26" patternUnits="userSpaceOnUse"><path d="M-2 13 Q14 -1 31 13 T64 13 T97 13" fill="none" style="stroke:var(--wave)" stroke-width="8"/></pattern></defs><rect width="100%" height="100%" fill="url(#wv)"/></svg>
+  <div class="count"><span class="num">${left}</span><span class="lbl">${left===1?"dia":"dias"} até 30 de janeiro. Day ${Math.max(1,97-left)} of 96.</span></div>
+  <div class="phase"><h3>Fase ${curPhase()+1}: ${esc(ph.n)}</h3><p class="small">${esc(ph.f)}</p></div>
+  <div class="row between section-title"><h2>Hoje</h2><span class="muted small">${mins} of ${S.target} min</span></div>
+  <div class="bar" style="margin-bottom:14px"><i style="width:${Math.min(100,mins/S.target*100)}%"></i></div>
+  <div class="list">
+    <button class="item" data-act="go" data-to="study">${tickHTML(due===0&&l.rev>0)}<span class="grow"><span class="t">Reviews</span><br><span class="s">${due} due now</span></span></button>
+    <button class="item" data-act="go" data-to="study">${tickHTML(newDone)}<span class="grow"><span class="t">New sentences</span><br><span class="s">${l.nw} of ${S.newPerDay+(l.bonus||0)} learned today</span></span></button>
+    <button class="item" data-act="goSpeak" data-mode="chat">${tickHTML(l.chat>=10)}<span class="grow"><span class="t">Conversation</span><br><span class="s">${l.chat} of 10 messages to Bia</span></span></button>
+    <button class="item" data-act="goSpeak" data-mode="shadow">${tickHTML(l.shadow>=1)}<span class="grow"><span class="t">Shadowing</span><br><span class="s">Repeat one dialogue out loud</span></span></button>
+    <button class="item" data-act="go" data-to="grammar">${tickHTML(l.gram>=1)}<span class="grow"><span class="t">Grammar drill</span><br><span class="s">One short set</span></span></button>
+    <div class="item">${tickHTML(l.imm>=20)}<span class="grow"><span class="t">Immersion</span><br><span class="s">${l.imm} min of podcasts, series or music</span></span><button class="chip" data-act="imm" data-m="10">+10</button><button class="chip" data-act="imm" data-m="30">+30</button></div>
+  </div>
+  <button class="btn wide" style="margin-top:16px" data-act="handsfree">Hands-free audio drill (walking, commuting)</button>
+  <p class="note">Plays English, pauses for you to say it in Portuguese, then plays the answer. Keep the screen on; most phones stop speech when locked.</p>
+  <details style="margin-top:16px"><summary>What to listen to</summary><ul>
+    <li>Podcasts: Speaking Brazilian, Carioca Connection</li>
+    <li>YouTube: Easy Portuguese (street interviews), Portuguese With Leo</li>
+    <li>Netflix: Sintonia, Cidade Invisível, 3%. Use Portuguese subtitles from phase 3</li>
+    <li>Music: Seu Jorge, Marisa Monte, Anavitória. Look up the lyrics and sing along</li>
+    <li>From phase 3: a human tutor on italki or Preply, 2–3 times a week</li>
+  </ul></details>`;
+}
+
+/* ================= RENDER: STUDY ================= */
+const LS={on:false,token:0,list:[],i:0,cur:null,phase:""};
+function renderStudy(){
+  const v=$("#v-study");
+  if(LS.on){
+    const n=LS.cur;
+    v.innerHTML=`<h1>Hands-free drill</h1><p class="muted small" style="margin:6px 0 14px">Say the Portuguese out loud before you hear it.</p>
+    <div class="listen">${n?`<p class="muted">${LS.phase==="en"?"In English":LS.phase==="think"?"Your turn: say it":"Em português"}</p>
+      <p class="big">${LS.phase==="pt"?esc(n.pt):esc(n.en)}</p>${LS.phase==="pt"?`<p class="muted">${esc(n.en)}</p>`:""}`:"<p>Starting…</p>"}
+      <p class="small muted">${LS.i+1} of ${LS.list.length}</p></div>
+    <button class="btn wide quiet" style="margin-top:14px" data-act="listenStop">Stop</button>`;
+    return;
+  }
+  if(!ST.built)buildQueue();
+  if(!ST.cur&&ST.queue.length)nextCard();
+  const due=dueNotes().length, fresh=Math.min(freshLeft(),freshNotes(999).length)+learningNotes().length;
+  const head=`<div class="studyhead"><span><b>${due}</b> to review</span><span><b>${fresh}</b> new</span><span class="grow"></span><button class="link" data-act="handsfree">Hands-free</button></div>`;
+  if(!ST.cur){v.innerHTML=head+doneHTML();return;}
+  const n=noteById(ST.cur);if(!n){nextCard();return renderStudy();}
+  const c=S.cards[n.id], mode=modeFor(c), isNew=!c.reps;
+  const modeLbl={listen:"Listen and understand",produce:"Say it in Portuguese",audio:"Audio only: what does it mean?"}[mode];
+  let prompt="";
+  if(mode==="listen")prompt=`<p class="prompt">${esc(n.pt)}</p>`;
+  else if(mode==="produce")prompt=`<p class="prompt">${esc(n.en)}</p>`;
+  else prompt=`<p class="prompt hidden-text">Tap play and listen</p>`;
+  const playBtn=mode!=="produce"||ST.revealed?`<button class="icon" data-act="play" aria-label="Play audio">${ICON.play}</button>`:"";
+  let input="";
+  if(mode==="produce"&&!ST.revealed){
+    input=`<div class="inputrow"><input class="text" id="typed" placeholder="Type or say it" autocomplete="off" autocapitalize="off" spellcheck="false" value="${esc(ST.typed)}">${SR?`<button class="icon" data-act="micCard" aria-label="Speak answer">${ICON.mic}</button>`:""}</div>
+    <div class="accents">${"áâãàéêíóôõúç".split("").map(ch=>`<button data-act="accent" data-ch="${ch}">${ch}</button>`).join("")}</div>`;
+  }
+  let answer="";
+  if(ST.revealed){
+    let fb="";
+    if(ST.fb&&ST.fb.textbook){fb=`<p class="feedback hit">Correct, but that’s the textbook version. Say it like above.</p>`;}
+    else if(ST.fb){fb=ST.fb.ok?`<p class="feedback hit">${ST.fb.accents?"Right. Check the accents.":"Spot on."}</p>`:
+      `<p class="feedback">${ST.fb.words.map(x=>x.hit?`<span class="hit">${esc(x.w)}</span>`:`<span class="miss">${esc(x.w)}</span>`).join(" ")}</p><p class="small muted">You wrote: ${esc(ST.typed)}</p>`;}
+    answer=`<div class="answer"><p class="pt">${esc(n.pt)}</p><p class="en">${esc(n.en)}</p>${n.f?`<p class="small muted" style="margin-top:6px">Textbook: <s>${esc(n.f)}</s></p>`:""}${fb?`<div style="margin-top:8px">${fb}</div>`:""}</div>`;
+  }
+  const rates=ST.revealed?`<div class="rates">${[["Again","r1",1],["Hard","r2",2],["Good","r3",3],["Easy","r4",4]].map(([t,cl,r])=>`<button class="rate ${cl}" data-act="rate" data-r="${r}">${t}<small>${nextState(c,r).label}</small></button>`).join("")}</div>`
+    :`<button class="btn wide" style="margin-top:14px" data-act="reveal">${mode==="produce"?"Check":"Show answer"}</button>`;
+  v.innerHTML=head+`<article class="card"><div class="row between"><p class="mode">${modeLbl}${isNew?'<span class="badge">new</span>':""}</p><span class="small muted">${esc(n.u||"")}</span></div><div class="row" style="align-items:flex-start"><div class="grow">${prompt}</div>${playBtn}</div>${input}${answer}</article>${rates}`;
+  if(!ST.revealed&&mode!=="produce"&&!ST.autoplayed){ST.autoplayed=true;say(n.pt);}
+  const t=$("#typed");if(t){t.addEventListener("input",()=>ST.typed=t.value);t.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();doReveal();}});}
+}
+function doneHTML(){
+  const remaining=freshNotes(9999).length;
+  return `<div class="card" style="min-height:0"><h2>Tudo feito por agora</h2><p class="muted">${remaining?`${remaining} sentences left in your deck.`:"You’ve started every sentence in your deck. Generate a new set below."} Reviews come back when you’re about to forget them.</p>
+  <div class="row" style="flex-wrap:wrap"><button class="btn green" data-act="more" ${remaining?"":"disabled"}>Learn 10 more</button><button class="btn quiet" data-act="handsfree">Hands-free drill</button></div></div>
+  <h2 class="section-title">Generate a new set</h2>
+  ${aiGenHTML()}`;
+}
+function aiGenHTML(){
+  if(!SAMPLE_READY)return `<p class="muted small">Checking for Claude access…</p>`;
+  if(!SAMPLE)return `<p class="muted small">Add your Anthropic API key in Progresso, Settings, to turn this on. Everything else works without it.</p>`;
+  return `<p class="muted small" style="margin-bottom:10px">Claude writes 15 natural sentences at your level on any topic and adds them to your deck. At 20 a day, the built-in deck lasts about two weeks, so keep it topped up.</p>
+  <div class="row" style="flex-wrap:wrap;gap:8px;margin-bottom:10px">${TOPICS.map(t=>`<button class="chip" data-act="topic" data-t="${esc(t)}">${esc(t)}</button>`).join("")}</div>
+  <div class="inputrow"><input class="text" id="topic" placeholder="Or type a topic, e.g. talking about rent"><button class="btn" data-act="gen" id="genbtn">Create</button></div><p class="note" id="genmsg"></p>`;
+}
+function doReveal(){
+  const n=noteById(ST.cur);if(!n)return;const c=S.cards[n.id];
+  const t=$("#typed");if(t)ST.typed=t.value;
+  if(modeFor(c)==="produce"){ST.fb=check(ST.typed,n.pt);if(ST.fb&&!ST.fb.ok&&n.f&&norm(ST.typed)===norm(n.f))ST.fb={textbook:true};}
+  ST.revealed=true;renderStudy();say(n.pt);
+}
+function doRate(r){
+  const id=ST.cur, c=S.cards[id];const wasReview=c.reps>0;
+  const res=nextState(c,r);S.cards[id]=res.n;
+  if(wasReview)L().rev++;
+  if(res.requeue)ST.queue.splice(Math.min(3,ST.queue.length),0,id);
+  ST.autoplayed=false;nextCard();save();renderStudy();
+}
+async function genCards(topic){
+  const btn=$("#genbtn"), msg=$("#genmsg");if(!SAMPLE||!topic)return;
+  btn.disabled=true;msg.textContent="Writing your sentences…";
+  const existing=new Set(allNotes().map(n=>norm(n.pt)));
+  const prompt=`Write 15 flashcard sentences for an English speaker (British) learning Brazilian Portuguese, current level about ${level()}. Topic: ${topic}.
+Write them exactly how a Brazilian in their 20s-30s from São Paulo actually SAYS them to a friend, not textbook Portuguese: cê/você, tá, tô, tava, pra, pro, né, a gente (never nós), tem (never há), pronoun before verb (me ajuda, te ligo), ele/ela as objects, dropped subjects, fillers (tipo, aí, então), reactions, diminutives and common everyday slang where natural. 3 to 12 words each, high-frequency, varied grammar, every one usable in a real conversation. English: natural casual British English.
+For each, "book" is the stiff textbook/formal version if it differs meaningfully, else "".
+Return ONLY a JSON array: [{"pt": "...", "en": "...", "book": "..."}]`;
+  try{
+    const arr=await SAMPLE.json(prompt,{modelTier:"default"});
+    let added=0;
+    if(Array.isArray(arr))arr.forEach((x,i)=>{if(x&&typeof x.pt==="string"&&typeof x.en==="string"&&x.pt.trim()&&!existing.has(norm(x.pt))){S.ai.push({id:"ai"+Date.now().toString(36)+i,pt:x.pt.trim(),en:x.en.trim(),f:(typeof x.book==="string"&&norm(x.book)!==norm(x.pt))?x.book.trim():"",u:topic.slice(0,40)});existing.add(norm(x.pt));added++;}});
+    if(!added)throw {code:"empty"};
+    L().bonus=(L().bonus||0)+Math.min(added,10);save();ST.built=false;toast(added+" sentences added");renderStudy();
+  }catch(e){msg.textContent=e.code==="empty"?"Nothing new came back. Try a different topic.":aiError(e);btn.disabled=false;}
+}
+function startListen(){
+  let list=allNotes().filter(n=>S.cards[n.id]&&S.cards[n.id].reps>0).sort((a,b)=>S.cards[a.id].due-S.cards[b.id].due).slice(0,40);
+  if(!list.length)list=allNotes().slice(0,20);
+  LS.list=list.sort(()=>Math.random()-.5);LS.i=0;LS.on=true;LS.token++;LS.cur=null;
+  showView("study");runListen(LS.token);
+}
+async function runListen(tok){
+  while(LS.on&&tok===LS.token&&LS.i<LS.list.length){
+    const t0=Date.now(), n=LS.list[LS.i];LS.cur=n;
+    LS.phase="en";renderStudy();await say(n.en,{lang:"en"});if(tok!==LS.token)return;
+    LS.phase="think";renderStudy();await wait(3200);if(tok!==LS.token)return;
+    LS.phase="pt";renderStudy();await say(n.pt);await wait(800);if(tok!==LS.token)return;await say(n.pt,{rate:S.rate*0.85});await wait(1400);
+    if(tok!==LS.token)return;L().sec+=(Date.now()-t0)/1000;saveSoon();LS.i++;
+  }
+  if(tok===LS.token){LS.on=false;save();toast("Drill finished");renderStudy();}
+}
+function stopListen(){LS.on=false;LS.token++;hush();save();renderStudy();}
+
+/* ================= RENDER: SPEAK ================= */
+const SP={mode:"chat"};
+const CH={scen:null,turns:[],busy:false,showEn:{}};
+const SH={d:null,i:-1,playing:false,token:0,slow:false,showEn:false};
+const QZ={pair:null,ans:-1,pick:-1,score:0,n:0};
+function renderSpeak(){
+  const v=$("#v-speak");
+  const seg=`<div class="seg">${[["chat","Conversa"],["shadow","Sombra"],["sounds","Sons"]].map(([k,t])=>`<button data-act="spMode" data-m="${k}" class="${SP.mode===k?"on":""}">${t}</button>`).join("")}</div>`;
+  let body="";
+  if(SP.mode==="chat")body=chatHTML();else if(SP.mode==="shadow")body=shadowHTML();else body=soundsHTML();
+  v.innerHTML=`<h1>Falar</h1>`+seg+body;
+  if(SP.mode==="chat"&&CH.scen){const i=$("#chatin");if(i){i.addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendChat();}});}
+    const m=$(".msgs");if(m)window.scrollTo(0,document.body.scrollHeight);}
+}
+function chatHTML(){
+  if(!SAMPLE_READY)return `<p class="muted">Checking for Claude access…</p>`;
+  if(!SAMPLE)return `<p class="muted">Add your Anthropic API key in Progresso, Settings, to turn this on. Everything else works without it.</p>`;
+  if(!CH.scen)return `<p class="muted small" style="margin-bottom:12px">Chat with Bia, a paulistana who talks like a real person. She flags mistakes, and also anything correct but textbook, showing how a Brazilian would actually say it. Speaking beats typing, if your mic works here.</p>`+SCENARIOS.map(s=>`<button class="scen" data-act="scen" data-id="${s.id}"><b>${esc(s.t)}</b><span class="muted small">${esc(s.d)}</span></button>`).join("");
+  const sc=SCENARIOS.find(s=>s.id===CH.scen);
+  const msgs=CH.turns.map((t,i)=>{
+    if(t.role==="bia")return `<div class="msg bia"><div>${esc(t.pt)}</div>${CH.showEn[i]?`<div class="tr">${esc(t.en)}</div>`:""}<div class="tools"><button data-act="chatPlay" data-i="${i}">Play</button><button data-act="chatEn" data-i="${i}">${CH.showEn[i]?"Hide":"Translate"}</button></div></div>`;
+    let h=`<div class="msg me">${esc(t.pt)}</div>`;
+    if(t.corr)h+=`<div class="corr"><b>${t.corr.kind==="stiff"?"More natural:":"Better:"}</b> ${esc(t.corr.fixed)}<br><span class="muted small">${esc(t.corr.why||"")}</span><div class="tools" style="margin-top:6px"><button class="link" data-act="chatSave" data-i="${i}" ${t.saved?"disabled":""}>${t.saved?"Added to deck":"Add to deck"}</button></div></div>`;
+    else if(t.checked)h+=`<div class="corr" style="background:var(--mata-soft)"><b style="color:var(--mata)">Natural.</b> Sounds Brazilian.</div>`;
+    return h;}).join("");
+  return `<div class="row between"><button class="link" data-act="scenBack">All scenarios</button><span class="muted small">${esc(sc.t)}</span></div>
+  <div class="msgs">${msgs}${CH.busy?`<div class="msg bia typing">Bia está digitando…</div>`:""}</div>
+  <div class="composer"><div class="inputrow"><input class="text" id="chatin" placeholder="Responda em português…" autocomplete="off" ${CH.busy?"disabled":""}>${SR?`<button class="icon" data-act="micChat" aria-label="Speak">${ICON.mic}</button>`:""}<button class="icon" style="background:var(--ipe);color:var(--ipe-ink)" data-act="send" aria-label="Send">${ICON.send}</button></div>
+  <div class="row" style="margin-top:6px"><label class="small muted"><input type="checkbox" data-set="autoplay" ${S.autoplay?"checked":""}> Read Bia’s replies aloud</label></div></div>`;
+}
+function chatPrompt(){
+  const sc=SCENARIOS.find(s=>s.id===CH.scen);
+  const tr=CH.turns.slice(-14).map(t=>(t.role==="me"?"Learner: ":"Bia: ")+t.pt).join("\n");
+  return `You are Bia, a 28-year-old paulistana chatting with Ezra, a guy from London learning Brazilian Portuguese (level about ${level()}). Your job is to teach him to sound like a real Brazilian, not a textbook.
+Scenario: ${sc.p}
+How you talk in "reply": exactly like a real Brazilian friend, never textbook. Use cê/você, tá, tô, tava, pra, pro, né, a gente (never nós), tem (never há), pronoun before the verb (me fala, te mando), ele/ela as objects, dropped subjects, fillers (tipo, então, aí, sabe?, pô), reactions (nossa, sério?, jura?, pois é, putz, que massa, caramba), diminutives (rapidinho, pertinho) and everyday slang (beleza, de boa, rolar, fechou, cara, mano) where it fits. Keep it 1 to 3 short sentences pitched to his level, usually ending with a question. Stay in character. If he seems stuck, rephrase more simply. ${CH.scen==="zap"?"This is WhatsApp texting: lowercase, abbreviations like vc, tb, pq, blz, msm, kkkk.":""}
+"correction" reviews ONLY his most recent message. Use kind "error" if it is wrong. Use kind "stiff" if it is correct but sounds textbook, robotic, formal or European (for example nós, há, você está in casual chat, para instead of pra, enclitic pronouns like ajude-me, eu o vi, answering with a bare "sim", over-full sentences with every subject pronoun). In "fixed" give exactly how a Brazilian would say it, "en" its casual English meaning, and "why" one short English sentence naming the main change. If he wrote English or mixed, give the natural Portuguese. If his message already sounds natural, or there is no message yet, set correction to null.
+Conversation so far:
+${tr||"(nothing yet: open the conversation casually)"}
+Return ONLY JSON: {"reply": "...", "en": "English translation of reply", "correction": null or {"kind": "error" or "stiff", "fixed": "...", "en": "...", "why": "..."}}`;
+}
+async function askBia(){
+  CH.busy=true;renderSpeak();
+  try{
+    const r=await SAMPLE.json(chatPrompt(),{modelTier:"quick",cache:false});
+    if(!r||typeof r.reply!=="string")throw {code:"bad"};
+    const last=CH.turns[CH.turns.length-1];
+    if(last&&last.role==="me"){if(r.correction&&r.correction.fixed)last.corr=r.correction;else last.checked=true;}
+    CH.turns.push({role:"bia",pt:r.reply,en:r.en||""});
+    CH.busy=false;renderSpeak();if(S.autoplay)say(r.reply);
+  }catch(e){CH.busy=false;renderSpeak();toast(aiError(e));}
+}
+function sendChat(){
+  const i=$("#chatin");if(!i||CH.busy)return;const t=i.value.trim();if(!t)return;
+  CH.turns.push({role:"me",pt:t});L().chat++;save();askBia();
+}
+function shadowHTML(){
+  if(!SH.d)return `<p class="muted small" style="margin-bottom:12px">Listen to each line, then say it out loud along with or just after the speaker, copying rhythm and melody, not just words. Studies on shadowing link it to gains in fluency and pronunciation.</p>`+DIALOGUES.map((d,i)=>`<button class="scen" data-act="shOpen" data-i="${i}"><b>${esc(d.t)}</b><span class="muted small">${esc(d.d)}</span></button>`).join("");
+  const d=DIALOGUES[SH.d];
+  return `<div class="row between"><button class="link" data-act="shBack">All dialogues</button><span class="muted small">${esc(d.t)}</span></div>
+  <div class="row" style="margin:10px 0 14px;flex-wrap:wrap"><button class="btn ${SH.playing?"quiet":""}" data-act="shPlay">${SH.playing?"Stop":"Play with pauses"}</button><button class="chip ${SH.slow?"on":""}" data-act="shSlow">Slower</button><button class="chip ${SH.showEn?"on":""}" data-act="shEn">English</button></div>
+  ${d.l.map((x,i)=>`<button class="line ${SH.i===i?"cur":""}" data-act="shLine" data-i="${i}">${esc(x[0])}${SH.showEn?`<div class="en">${esc(x[1])}</div>`:""}</button>`).join("")}
+  <p class="note">Tap any line to hear it. In “Play with pauses”, the gap after each line is your turn to repeat it.</p>`;
+}
+async function shadowPlay(tok){
+  const d=DIALOGUES[SH.d];const start=Math.max(0,SH.i<0||SH.i>=d.l.length-1?0:SH.i);
+  for(let i=start;i<d.l.length;i++){
+    if(tok!==SH.token)return;const t0=Date.now();SH.i=i;renderSpeak();
+    await say(d.l[i][0],{rate:SH.slow?0.72:S.rate});if(tok!==SH.token)return;
+    await wait(Math.max(1600,d.l[i][0].length*85));L().sec+=(Date.now()-t0)/1000;
+  }
+  if(tok===SH.token){SH.playing=false;L().shadow++;save();toast("Dialogue done. Do it once more without English.");renderSpeak();}
+}
+function soundsHTML(){
+  const p=QZ.pair;
+  const quiz=p?`<p class="muted small" style="margin-bottom:10px">Which word did you hear?</p><div class="pair">${[0,1].map(k=>`<button data-act="qzPick" data-k="${k}" class="${QZ.pick<0?"":k===QZ.ans?"right":k===QZ.pick?"wrong":""}">${esc(p[k])}<div class="small muted" style="font-family:inherit;font-weight:400">${QZ.pick<0?"":esc(p[k+2])}</div></button>`).join("")}</div>
+    <div class="row" style="margin-top:12px"><button class="btn quiet" data-act="qzReplay">Hear it again</button><button class="btn" data-act="qzNext">${QZ.pick<0?"Skip":"Next pair"}</button></div><p class="note">${QZ.score} of ${QZ.n} right</p>`
+    :`<button class="btn wide" data-act="qzNext">Start the listening quiz</button>`;
+  return `<h2 style="margin-bottom:10px">Ear training</h2>${quiz}
+  <h2 class="section-title">Sounds that trip English speakers</h2>
+  <div class="list">${SOUNDS.map((s,i)=>`<button class="item" data-act="sound" data-i="${i}"><span class="icon" style="width:36px;height:36px">${ICON.play}</span><span class="grow"><span class="t">${esc(s[0])}</span><br><span class="s">${esc(s[1])}</span></span></button>`).join("")}</div>
+  <p class="note">Audio uses your phone’s Brazilian voice. Pick a different one in Progresso if it sounds European.</p>`;
+}
+function qzNext(){const p=PAIRS[Math.floor(Math.random()*PAIRS.length)];QZ.pair=p;QZ.ans=Math.random()<.5?0:1;QZ.pick=-1;renderSpeak();say(p[QZ.ans],{rate:0.85});}
+
+/* ================= RENDER: GRAMMAR ================= */
+const GR={u:null,list:null,i:0,score:0,pick:-1,busy:false};
+function renderGrammar(){
+  const v=$("#v-grammar");
+  if(GR.u===null){
+    v.innerHTML=`<h1>Gramática</h1><p class="muted small" style="margin:6px 0 16px">Start with the five Fala de rua topics: they’re what stops you sounding like a textbook. Then work through the rest roughly in order.</p>
+    <div class="list">${GRAMMAR.map((g,i)=>{const s=S.gram[g.id];return `<button class="item" data-act="grOpen" data-i="${i}">${tickHTML(s!=null&&s>=0.8)}<span class="grow"><span class="t">${esc(g.t)}</span><br><span class="s">${s==null?"Not started":"Best: "+Math.round(s*100)+"%"}</span></span></button>`;}).join("")}</div>`;
+    return;
+  }
+  const g=GRAMMAR[GR.u];
+  if(!GR.list){
+    v.innerHTML=`<button class="link" data-act="grBack">All topics</button><h1 style="margin:6px 0 14px">${esc(g.t)}</h1><div class="expl">${g.ex}</div>
+    <button class="btn wide" style="margin-top:16px" data-act="grStart">Practise (${g.d.length} questions)</button>
+    ${SAMPLE?`<button class="btn wide quiet" style="margin-top:10px" data-act="grAI" ${GR.busy?"disabled":""}>${GR.busy?"Writing new questions…":"New questions from Claude"}</button>`:""}`;
+    return;
+  }
+  if(GR.i>=GR.list.length){
+    const pct=GR.score/GR.list.length;
+    v.innerHTML=`<button class="link" data-act="grBack">All topics</button><div class="card" style="margin-top:10px;min-height:0"><h2>${GR.score} of ${GR.list.length}</h2><p class="muted">${pct>=0.8?"Solid. Come back in a few days to lock it in.":"Read the rule again, then retry. Mistakes now make the rule stick later."}</p>
+    <div class="row" style="flex-wrap:wrap"><button class="btn" data-act="grStart">Again</button>${SAMPLE?`<button class="btn quiet" data-act="grAI" ${GR.busy?"disabled":""}>${GR.busy?"Writing…":"New questions"}</button>`:""}<button class="btn quiet" data-act="grRule">Rule</button></div></div>`;
+    return;
+  }
+  const q=GR.list[GR.i];
+  v.innerHTML=`<div class="row between"><button class="link" data-act="grRule">Rule</button><span class="muted small">${GR.i+1} of ${GR.list.length}</span></div>
+  <div class="card" style="margin-top:8px;min-height:0"><p class="prompt">${esc(q[0])}</p>
+  <div class="opts">${q[1].map((o,k)=>`<button class="opt ${GR.pick<0?"":k===q[2]?"right":k===GR.pick?"wrong":""}" data-act="grPick" data-k="${k}" ${GR.pick>=0?"disabled":""}>${esc(o)}</button>`).join("")}</div>
+  ${GR.pick>=0?`<p class="muted">${esc(q[3]||"")}</p>`:""}</div>
+  ${GR.pick>=0?`<button class="btn wide" style="margin-top:14px" data-act="grNext">Next</button>`:""}`;
+}
+async function grAI(){
+  if(!SAMPLE||GR.busy)return;const g=GRAMMAR[GR.u];GR.busy=true;renderGrammar();
+  const prompt=`Create 8 multiple-choice drills for an English speaker learning Brazilian Portuguese (level about ${level()}) on this grammar point: ${g.t}.
+${g.rua?"Each item: a situation or a stiff textbook sentence, then three options where exactly one is how a Brazilian would really say it and two are stiff, textbook, European or wrong. No gap needed. ":"Each item: a natural spoken Brazilian Portuguese sentence (cê/você, tá, pra, a gente, tem) with exactly one gap written as ___, "}three options (one correct, two plausible mistakes), the correct option, and an English translation of the full sentence. Avoid items where more than one option is acceptable.
+Return ONLY a JSON array: [{"q": "...", "o": ["...","...","..."], "a": "...", "en": "..."}]`;
+  try{
+    const arr=await SAMPLE.json(prompt,{modelTier:"default"});
+    const list=(Array.isArray(arr)?arr:[]).filter(x=>x&&typeof x.q==="string"&&(g.rua||x.q.includes("___"))&&Array.isArray(x.o)&&x.o.length>=2&&x.o.includes(x.a)).map(x=>{const o=x.o.slice(0,4).sort(()=>Math.random()-.5);return [x.q,o,o.indexOf(x.a),x.en||""];});
+    if(!list.length)throw {code:"bad"};
+    GR.list=list;GR.i=0;GR.score=0;GR.pick=-1;
+  }catch(e){toast(aiError(e));}
+  GR.busy=false;renderGrammar();
+}
+
+/* ================= RENDER: PROGRESS ================= */
+function level(){
+  const known=Object.values(S.cards).filter(c=>c.ivl>=7).length;
+  const g=GRAMMAR.filter(x=>(S.gram[x.id]||0)>=0.8).length;
+  if(known<80)return "A1";if(known<220)return "A2";if(known<450)return g>=8?"B1":"A2+";return g>=11?"B1+":"B1";
+}
+function streak(){let n=0,d=new Date();if((S.log[dkey(d)]||{}).sec<600)d=new Date(d.getTime()-DAY);while(((S.log[dkey(d)]||{}).sec||0)>=600){n++;d=new Date(d.getTime()-DAY);}return n;}
+function renderProgress(){
+  const totalSec=Object.values(S.log).reduce((a,l)=>a+(l.sec||0)+(l.imm||0)*60,0);
+  const cards=Object.values(S.cards), known=cards.filter(c=>c.ivl>=7).length, started=cards.filter(c=>c.reps>0).length;
+  const hrs=totalSec/3600, projected=hrs+daysLeft()*S.target/60;
+  const days=[];for(let i=13;i>=0;i--){const d=new Date(Date.now()-i*DAY);const l=S.log[dkey(d)]||{};days.push({m:((l.sec||0)/60)+(l.imm||0),today:i===0});}
+  const max=Math.max(S.target,...days.map(d=>d.m));
+  const pv=ptVoices();
+  $("#v-progress").innerHTML=`<h1>Progresso</h1>
+  <div class="stats" style="margin-top:14px">
+    <div class="stat"><div class="v">${level()}</div><div class="k">Estimated level</div></div>
+    <div class="stat"><div class="v">${streak()}</div><div class="k">Day streak (10+ min)</div></div>
+    <div class="stat"><div class="v">${hrs.toFixed(1)}h</div><div class="k">Total time logged</div></div>
+    <div class="stat"><div class="v">${Math.round(projected)}h</div><div class="k">By 30 Jan at your daily target</div></div>
+    <div class="stat"><div class="v">${known}</div><div class="k">Sentences you know well</div></div>
+    <div class="stat"><div class="v">${started}</div><div class="k">Sentences in rotation</div></div>
+  </div>
+  <h2 class="section-title">Last 14 days</h2>
+  <div class="chart" aria-label="Minutes per day">${days.map(d=>`<div class="${d.today?"today":""}" style="height:${Math.max(2,d.m/max*100)}%" title="${Math.round(d.m)} min"></div>`).join("")}</div>
+  <p class="note">Goal line is ${S.target} min a day. Yellow is today.</p>
+  <h2 class="section-title">The plan</h2>
+  <div class="timeline">${PHASES.map((p,i)=>`<div class="tl ${i===curPhase()?"now":""}"><span class="n">${i+1}</span><div><b>${esc(p.n)}</b> <span class="muted small">${fmtD(p.from)} to ${fmtD(p.to)}</span><p class="small muted">${esc(p.f)}</p></div></div>`).join("")}</div>
+  <h2 class="section-title">Settings</h2>
+  <div class="list">
+    <div class="setting"><span>New sentences a day</span><select data-set="newPerDay">${[10,15,20,25,30,40].map(x=>`<option ${S.newPerDay===x?"selected":""}>${x}</option>`).join("")}</select></div>
+    <div class="setting"><span>Daily target (minutes)</span><select data-set="target">${[30,45,60,90,120,150].map(x=>`<option ${S.target===x?"selected":""}>${x}</option>`).join("")}</select></div>
+    <div class="setting"><span>Speech speed</span><select data-set="rate">${[[0.8,"Slow"],[0.95,"Natural"],[1.1,"Fast"]].map(([x,t])=>`<option value="${x}" ${S.rate===x?"selected":""}>${t}</option>`).join("")}</select></div>
+    <div class="setting"><span>Portuguese voice</span><select data-set="voice"><option value="">Automatic</option>${pv.map(v=>`<option value="${esc(v.name)}" ${S.voice===v.name?"selected":""}>${esc(v.name)} (${esc(v.lang)})</option>`).join("")}</select></div>
+    <div class="setting" style="flex-wrap:wrap"><span>Anthropic API key</span><span class="row" style="flex:1;min-width:200px"><input class="text" id="apikey" type="password" autocomplete="off" placeholder="${S.apiKey?"Saved. Paste to replace":"sk-ant-…"}" style="padding:8px 10px"><button class="chip" data-act="saveKey">Save</button>${S.apiKey?`<button class="chip" data-act="clearKey">Remove</button>`:""}</span></div>
+    <div class="setting"><span>Theme</span><select data-set="theme">${[["auto","Match phone"],["light","Light"],["dark","Dark"]].map(([x,t])=>`<option value="${x}" ${S.theme===x?"selected":""}>${t}</option>`).join("")}</select></div>
+  </div>
+  <p class="note">${esc(SYNC)}. ${pv.length?"":"No Brazilian voice found on this device; install one in your phone’s text-to-speech settings."}</p>
+  <h2 class="section-title">Backup</h2>
+  <div class="row" style="flex-wrap:wrap"><button class="btn quiet" data-act="export">Copy backup</button><button class="btn quiet" data-act="importShow">Restore backup</button><button class="btn quiet" data-act="reset">Reset all</button></div>
+  <div id="bk"></div>`;
+}
+function fmtD(k){const [y,m,d]=k.split("-").map(Number);return new Date(y,m-1,d).toLocaleDateString("en-GB",{day:"numeric",month:"short"});}
+
+/* ================= NAV & EVENTS ================= */
+function showView(name){
+  if(VIEW!==name){hush();if(LS.on&&name!=="study"){LS.on=false;LS.token++;}if(SH.playing){SH.playing=false;SH.token++;}if(REC){try{REC.stop();}catch(e){}}}
+  VIEW=name;
+  document.querySelectorAll(".view").forEach(v=>v.classList.toggle("on",v.id==="v-"+name));
+  document.querySelectorAll(".tabs button").forEach(b=>b.classList.toggle("on",b.dataset.tab===name));
+  if(name==="study"&&!ST.cur&&!LS.on)ST.built=false;
+  rerender();if(!(name==="speak"&&CH.scen))window.scrollTo(0,0);
+}
+function rerender(){({today:renderToday,study:renderStudy,speak:renderSpeak,grammar:renderGrammar,progress:renderProgress})[VIEW]();}
+document.querySelector(".tabs").addEventListener("click",e=>{const b=e.target.closest("[data-tab]");if(b)showView(b.dataset.tab);});
+
+const A={
+  go:b=>showView(b.dataset.to),
+  goSpeak:b=>{SP.mode=b.dataset.mode;showView("speak");},
+  imm:b=>{L().imm+=Number(b.dataset.m);save();renderToday();toast("Immersion logged");},
+  handsfree:()=>startListen(),
+  listenStop:()=>stopListen(),
+  play:()=>{const n=noteById(ST.cur);if(n)say(n.pt);},
+  reveal:()=>doReveal(),
+  rate:b=>doRate(Number(b.dataset.r)),
+  accent:b=>{const t=$("#typed");if(!t)return;const s=t.selectionStart??t.value.length,e=t.selectionEnd??s;t.value=t.value.slice(0,s)+b.dataset.ch+t.value.slice(e);ST.typed=t.value;t.focus();t.setSelectionRange(s+1,s+1);},
+  micCard:()=>startMic(txt=>{const t=$("#typed");if(t){t.value=txt;ST.typed=txt;}}),
+  more:()=>{L().bonus=(L().bonus||0)+10;save();ST.built=false;renderStudy();},
+  topic:b=>{const t=$("#topic");if(t)t.value=b.dataset.t;genCards(b.dataset.t);},
+  gen:()=>{const t=$("#topic");if(t&&t.value.trim())genCards(t.value.trim());},
+  spMode:b=>{hush();if(SH.playing){SH.playing=false;SH.token++;}SP.mode=b.dataset.m;renderSpeak();},
+  scen:b=>{CH.scen=b.dataset.id;CH.turns=[];CH.showEn={};askBia();},
+  scenBack:()=>{CH.scen=null;hush();renderSpeak();},
+  send:()=>sendChat(),
+  micChat:()=>startMic(txt=>{const i=$("#chatin");if(i)i.value=txt;}),
+  chatPlay:b=>say(CH.turns[b.dataset.i].pt),
+  chatEn:b=>{CH.showEn[b.dataset.i]=!CH.showEn[b.dataset.i];renderSpeak();},
+  chatSave:b=>{const t=CH.turns[b.dataset.i];if(!t||!t.corr||t.saved)return;S.ai.push({id:"ai"+Date.now().toString(36),pt:t.corr.fixed,en:t.corr.en||t.pt,u:"From conversation"});t.saved=true;save();toast("Added to your deck");renderSpeak();},
+  shOpen:b=>{SH.d=Number(b.dataset.i);SH.i=-1;renderSpeak();},
+  shBack:()=>{SH.token++;SH.playing=false;hush();SH.d=null;renderSpeak();},
+  shPlay:()=>{if(SH.playing){SH.playing=false;SH.token++;hush();renderSpeak();return;}SH.playing=true;SH.token++;renderSpeak();shadowPlay(SH.token);},
+  shSlow:()=>{SH.slow=!SH.slow;renderSpeak();},
+  shEn:()=>{SH.showEn=!SH.showEn;renderSpeak();},
+  shLine:b=>{SH.token++;SH.playing=false;hush();SH.i=Number(b.dataset.i);renderSpeak();say(DIALOGUES[SH.d].l[SH.i][0],{rate:SH.slow?0.72:S.rate});},
+  sound:b=>say(SOUNDS[b.dataset.i][0].replace(/ vs /g,", "),{rate:0.8}),
+  qzNext:()=>qzNext(),
+  qzReplay:()=>{if(QZ.pair)say(QZ.pair[QZ.ans],{rate:0.85});},
+  qzPick:b=>{if(QZ.pick>=0)return;QZ.pick=Number(b.dataset.k);QZ.n++;if(QZ.pick===QZ.ans)QZ.score++;renderSpeak();},
+  grOpen:b=>{GR.u=Number(b.dataset.i);GR.list=null;renderGrammar();window.scrollTo(0,0);},
+  grBack:()=>{GR.u=null;GR.list=null;renderGrammar();},
+  grRule:()=>{GR.list=null;renderGrammar();},
+  grStart:()=>{const g=GRAMMAR[GR.u];GR.list=g.d.map(q=>{const o=q[1].map((x,k)=>({x,k})).sort(()=>Math.random()-.5);return [q[0],o.map(y=>y.x),o.findIndex(y=>y.k===q[2]),q[3]];}).sort(()=>Math.random()-.5);GR.i=0;GR.score=0;GR.pick=-1;renderGrammar();},
+  grAI:()=>grAI(),
+  grPick:b=>{const q=GR.list[GR.i];GR.pick=Number(b.dataset.k);if(GR.pick===q[2])GR.score++;renderGrammar();say(q[0].includes("___")?q[0].replace("___",q[1][q[2]]).replace(/\s*\(.*?\)\s*$/,"").replace(/[“”]/g,""):q[1][q[2]]);},
+  grNext:()=>{GR.i++;GR.pick=-1;if(GR.i>=GR.list.length){const g=GRAMMAR[GR.u];const pct=GR.score/GR.list.length;S.gram[g.id]=Math.max(S.gram[g.id]||0,pct);L().gram++;save();}renderGrammar();},
+  export:async()=>{const txt=JSON.stringify(S);try{await navigator.clipboard.writeText(txt);toast("Backup copied. Paste it somewhere safe.");}catch(e){$("#bk").innerHTML=`<p class="note">Copy all of this text:</p><textarea class="text" readonly>${esc(txt)}</textarea>`;}},
+  importShow:()=>{$("#bk").innerHTML=`<p class="note">Paste a backup, then restore. This replaces current progress.</p><textarea class="text" id="imp"></textarea><button class="btn" style="margin-top:8px" data-act="import">Restore</button>`;},
+  import:()=>{try{const d=JSON.parse($("#imp").value);if(!d||!d.v)throw 0;S=Object.assign(defaults(),d);save();applyTheme();ST.built=false;toast("Backup restored");renderProgress();}catch(e){toast("That text isn’t a Fala backup.");}},
+  saveKey:()=>{const v=($("#apikey").value||"").trim();if(!v){toast("Paste a key first.");return;}S.apiKey=v;setupAI();save();toast("Key saved on this phone");renderProgress();},
+  clearKey:()=>{S.apiKey="";setupAI();save();toast("Key removed");renderProgress();},
+  reset:()=>{if(confirm("Delete all progress? This can’t be undone.")){const k=S.apiKey;S=defaults();S.apiKey=k;save();ST.built=false;ST.cur=null;applyTheme();toast("Progress reset");renderProgress();}}
+};
+document.addEventListener("click",e=>{const b=e.target.closest("[data-act]");if(!b||b.disabled)return;const f=A[b.dataset.act];if(f)f(b,e);});
+document.addEventListener("change",e=>{const el=e.target.closest("[data-set]");if(!el)return;const k=el.dataset.set;
+  if(k==="autoplay")S.autoplay=el.checked;
+  else if(k==="voice"||k==="theme")S[k]=el.value;
+  else S[k]=Number(el.value);
+  if(k==="theme")applyTheme();
+  if(k==="newPerDay")ST.built=false;
+  save();if(k==="voice")say("Olá! Essa é a minha voz.");});
+document.addEventListener("visibilitychange",()=>{if(document.hidden)save();});
+renderToday();
+if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
+</script>
+</body>
+</html>
