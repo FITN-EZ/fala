@@ -115,6 +115,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .rate{border:0;border-radius:12px;padding:10px 4px;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:2px;min-height:58px}
 .rate small{font-weight:400;font-size:.75rem;opacity:.85}
 .r1{background:var(--roxo-soft);color:var(--roxo)}
+.rate.sug{outline:3px solid var(--ipe);outline-offset:2px}
 .r2{background:var(--bg);color:var(--ink);border:1.5px solid var(--line)}
 .r3{background:var(--mata);color:var(--surface)}
 .r4{background:var(--ipe);color:var(--ipe-ink)}
@@ -209,6 +210,22 @@ details li+li{margin-top:6px}
 .cele .box{background:var(--surface);border-radius:20px;padding:26px 22px;max-width:360px;width:100%;text-align:center;animation:pop .28s ease-out}
 .cele .wave{height:36px;margin-bottom:16px}
 .cele h2{font-size:1.6rem;margin-bottom:8px}
+.zone{min-height:58px;border-bottom:2px solid var(--line);display:flex;flex-wrap:wrap;gap:8px;padding:10px 0;align-content:flex-start}
+.zone.bank{border:0;justify-content:center;margin-top:12px}
+.tile{border:1.5px solid var(--line);border-bottom-width:3px;background:var(--surface);color:var(--ink);border-radius:12px;padding:9px 13px;font-size:1.05rem;touch-action:none;user-select:none;-webkit-user-select:none;position:relative}
+.tile.ghost{opacity:.25;pointer-events:none}
+.bigpic{font-size:5.5rem;text-align:center;line-height:1.1;margin:6px 0}
+.picopts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.picopts button{border:1.5px solid var(--line);background:var(--surface);border-radius:14px;padding:14px 8px;font-size:1.15rem;color:var(--ink)}
+.picopts.emo button{font-size:3.2rem;padding:10px}
+.picopts button.right{border-color:var(--mata);background:var(--mata-soft)}
+.picopts button.wrong{border-color:var(--roxo);background:var(--roxo-soft)}
+.fb{border-radius:14px;padding:14px;margin-top:14px}
+.fb.ok{background:var(--mata-soft)}
+.fb.bad{background:var(--roxo-soft)}
+.fb b{font-family:"Familjen Grotesk",sans-serif;font-size:1.1rem}
+.prhead{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.prhead .bar{flex:1;height:10px}
 @keyframes pop{from{transform:scale(.85);opacity:0}to{transform:scale(1);opacity:1}}
 @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
 </style>
@@ -232,7 +249,7 @@ details li+li{margin-top:6px}
 <div id="celehost"></div>
 
 <script>const COURSE_DATA=[];</script>
-<script src="c1.js"></script><script src="c2.js"></script><script src="c3.js"></script><script src="c4.js"></script><script src="c5.js"></script>
+<script src="c6.js"></script><script src="c1.js"></script><script src="c2.js"></script><script src="c3.js"></script><script src="c4.js"></script><script src="c5.js"></script>
 <script>
 /* ================= CONTENT ================= */
 const UNITS=[
@@ -316,6 +333,10 @@ const SOUNDS=[
 const PAIRS=[["avó","avô","grandma","grandpa"],["vovó","vovô","granny","grandad"],["pão","pau","bread","stick"],["mão","mau","hand","bad"],["caro","carro","expensive","car"],["era","erra","was","makes a mistake"],["fala","falha","speaks","fails"],["sono","sonho","sleep","dream"],["lá","lã","there","wool"],["pais","país","parents","country"],["sem","se","without","if"],["mora","morra","lives","dies"]];
 
 const SCENARIOS=[
+{id:"bloco",t:"Bloco de Carnaval",d:"Chat with someone in the crowd.",p:"You are at a Carnival bloco street party in Rio, glitter everywhere. You meet him in the crowd: chat about costumes, the music, where he’s from and plans for the rest of Carnival."},
+{id:"balada",t:"Na balada",d:"Talk at the bar between songs.",p:"You are at a club in São Paulo chatting with him at the bar between songs. Keep lines short like real loud-club talk: drinks, the DJ, dancing, where to go after."},
+{id:"praia",t:"Na praia",d:"Beach chat and ordering at the barraca.",p:"You are at Ipanema beach. Sometimes play the barraca seller, sometimes a friendly local next to him: sun, drinks, altinha, the sunset, plans for tonight."},
+{id:"hostel",t:"No hostel",d:"Make friends and plan the night out.",p:"You are a Brazilian traveller at the same hostel in Rio. Make friends and plan tonight’s night out and tomorrow’s beach or boat trip."},
 {id:"livre",t:"Papo livre",d:"Chat about anything: your week, plans, interests.",p:"Free conversation. Ask about his week, work, training and plans. Keep topics varied."},
 {id:"padaria",t:"Na padaria",d:"Order breakfast and pay.",p:"You work the counter at a busy padaria in São Paulo. He is a customer ordering breakfast and paying."},
 {id:"uber",t:"No Uber",d:"Small talk with a chatty driver.",p:"You are a friendly Uber driver in São Paulo making small talk: where he’s from, why he’s in Brazil, recommendations."},
@@ -335,8 +356,8 @@ const PHASES=[
 
 /* ================= STATE ================= */
 const KEY="fala-v1", DAY=864e5, END=new Date(2027,0,30).getTime();
-function defaults(){return {v:1,updated:0,cards:{},ai:[],newPerDay:20,target:90,rate:0.95,voice:"",theme:"auto",autoplay:true,apiKey:"",provider:"anthropic",localUrl:"",localModel:"",xp:0,xpGoal:400,courseDone:[],log:{},gram:{}};}
-function load(){try{const s=JSON.parse(localStorage.getItem(KEY)||"null");if(s&&s.v){Object.keys(s.cards||{}).forEach(k=>{if(/^u\d/.test(k))delete s.cards[k];});return Object.assign(defaults(),s);}}catch(e){}return defaults();}
+function defaults(){return {v:1,updated:0,cards:{},ai:[],newPerDay:20,target:90,rate:0.95,voice:"",theme:"auto",autoplay:true,apiKey:"",idv2:true,provider:"anthropic",localUrl:"",localModel:"",xp:0,xpGoal:400,courseDone:[],log:{},gram:{}};}
+function load(){try{const s=JSON.parse(localStorage.getItem(KEY)||"null");if(s&&s.v){if(!("idv2" in s))s.idv2=false;Object.keys(s.cards||{}).forEach(k=>{if(/^u\d/.test(k))delete s.cards[k];});return Object.assign(defaults(),s);}}catch(e){}return defaults();}
 let S=load();
 const $=(s,el=document)=>el.querySelector(s);
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -355,8 +376,15 @@ applyTheme();
 let NOTES=null, NOTESET=null;
 function allNotes(){
   if(!NOTES){NOTES=[];NOTESET=new Set();
-    UNITS.forEach((u,ui)=>u.items.forEach((it,ii)=>{NOTESET.add(norm(it[0]));NOTES.push({id:"c"+ui+"-"+ii,pt:it[0],en:it[1],f:it[2]||"",u:u.t});}));
-    (typeof COURSE_DATA!=="undefined"?COURSE_DATA:[]).forEach((u,ui)=>u.items.forEach((it,ii)=>{const k=norm(it[0]);if(NOTESET.has(k))return;NOTESET.add(k);NOTES.push({id:"k"+ui+"-"+ii,pt:it[0],en:it[1],f:it[2]||"",u:u.t,l:u.l});}));}
+    const CD=typeof COURSE_DATA!=="undefined"?COURSE_DATA:[];
+    const addUnit=(u,ui)=>u.items.forEach((it,ii)=>{NOTESET.add(norm(it[0]));NOTES.push({id:"c"+ui+"-"+ii,pt:it[0],en:it[1],f:it[2]||"",u:u.t});});
+    const addTopic=u=>u.items.forEach((it,ii)=>{const k=norm(it[0]);if(NOTESET.has(k))return;NOTESET.add(k);NOTES.push({id:"k:"+u.t+"-"+ii,pt:it[0],en:it[1],f:it[2]||"",u:u.t,l:u.l});});
+    UNITS.forEach((u,ui)=>{if(ui<8)addUnit(u,ui);});
+    CD.filter(u=>u.party).forEach(addTopic);
+    UNITS.forEach((u,ui)=>{if(ui>=8)addUnit(u,ui);});
+    CD.filter(u=>!u.party).forEach(addTopic);
+    if(!S.idv2){const old=CD.filter(u=>!u.party);Object.keys(S.cards).forEach(k=>{const m=k.match(/^k(\d+)-(\d+)$/);if(m&&old[+m[1]]){S.cards["k:"+old[+m[1]].t+"-"+m[2]]=S.cards[k];delete S.cards[k];}});S.idv2=true;}
+  }
   return NOTES.concat(S.ai.filter(n=>!NOTESET.has(norm(n.pt))));
 }
 function noteById(id){return allNotes().find(n=>n.id===id);}
@@ -543,6 +571,7 @@ function nextMission(){
   const gs=unitGroups();
   if(due)return {k:"Reviews first, before you forget them",t:`Clear ${due} review${due===1?"":"s"}`,s:`About ${Math.max(1,Math.ceil(due*8/60))} min.`,xp:"+5 XP each",btn:"Start reviews",go:()=>showView("study")};
   if(left)return {k:"New material",t:`Learn ${left} new sentence${left===1?"":"s"}`,s:`From “${gs[curUnitIdx(gs)].t}”.`,xp:"+10 XP each",btn:"Start learning",go:()=>showView("study")};
+  if((l.active||0)<1)return {k:"Active practice",t:"Build, type, say and match",s:"12 quick exercises from sentences you’ve learned.",xp:"+5 each",btn:"Start practice",go:()=>startPractice()};
   if(SAMPLE&&l.chat<10)return {k:"Speaking practice",t:"Talk to Bia",s:`${10-l.chat} more message${10-l.chat===1?"":"s"} today. Pick any scenario.`,xp:"+15 XP each",btn:"Open chat",go:()=>{SP.mode="chat";showView("speak");}};
   if(l.shadow<1)return {k:"Pronunciation",t:"Shadow one dialogue",s:"Repeat each line out loud in the pauses.",xp:"+30 XP",btn:"Pick a dialogue",go:()=>{SP.mode="shadow";showView("speak");}};
   if(l.gram<1){const gi=nextGrammarIdx();return {k:"Grammar",t:GRAMMAR[gi].t,s:"Read the rule, then do one set of 6.",xp:"+20 XP and up",btn:"Start the set",go:()=>{GR.u=gi;GR.list=null;showView("grammar");}};}
@@ -569,6 +598,7 @@ function renderToday(){
   <div class="list">
     ${row(due===0&&l.rev>0,"Reviews",`${due} due now`,"+5 each","go",'data-to="study"')}
     ${row(newDone,"New sentences",`${l.nw} of ${S.newPerDay+(l.bonus||0)} learned`,"+10 each","go",'data-to="study"')}
+    ${row((l.active||0)>=1,"Active practice","Build, type, say and match","+5 each","practice")}
     ${row(l.chat>=10,"Talk to Bia",SAMPLE?`${l.chat} of 10 messages`:"Set up AI in Progresso","+15 each","goSpeak",'data-mode="chat"')}
     ${row(l.shadow>=1,"Shadowing","Repeat one dialogue out loud","+30","goSpeak",'data-mode="shadow"')}
     ${row(l.gram>=1,"Grammar set","One set of 6 questions","+20","go",'data-to="grammar"')}
@@ -589,6 +619,118 @@ function renderToday(){
 
 /* ================= RENDER: STUDY ================= */
 const LS={on:false,token:0,list:[],i:0,cur:null,phase:""};
+/* ---------- active practice ---------- */
+const PICS=[["🏖️","praia","beach"],["🍺","cerveja","beer"],["🍹","caipirinha","caipirinha"],["☀️","sol","sun"],["🕶️","óculos escuros","sunglasses"],["👙","biquíni","bikini"],["🩴","chinelo","flip-flops"],["🎉","festa","party"],["🪩","balada","club night"],["💃","dançar","to dance"],["🎵","música","music"],["🥁","tambor","drum"],["🎭","fantasia","costume"],["✈️","avião","plane"],["🧳","mala","suitcase"],["🛂","passaporte","passport"],["🏨","hotel","hotel"],["🚕","táxi","taxi"],["🚌","ônibus","bus"],["💵","dinheiro","cash"],["💳","cartão","card"],["📱","celular","phone"],["🔑","chave","key"],["💧","água","water"],["🧊","gelo","ice"],["🌙","noite","night"],["🌧️","chuva","rain"],["🌊","onda","wave"],["🥥","coco","coconut"],["🍍","abacaxi","pineapple"],["🥩","carne","meat"],["🍤","camarão","prawn"],["🍦","sorvete","ice cream"],["⛱️","guarda-sol","beach umbrella"],["📸","foto","photo"],["🍾","garrafa","bottle"],["🎸","violão","guitar"],["🤕","ressaca","hangover"],["😴","sono","sleepiness"],["😂","rir","to laugh"],["🛥️","barco","boat"],["🏝️","ilha","island"],["🍔","hambúrguer","burger"],["🍕","pizza","pizza"],["☕","café","coffee"],["🥊","luva de boxe","boxing glove"],["🐢","tartaruga","turtle"],["🍉","melancia","watermelon"]];
+const PR={on:false,list:[],i:0,ex:null,answered:false,ok:false,xp:0,right:0,total:0,typed:"",justDragged:false};
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function makeEx(n,type){
+  const words=n.pt.split(/\s+/);
+  if((type==="tiles"||type==="listenTiles")&&words.length<3)type="say";
+  if(type==="blank"){
+    const cands=words.map((w,i)=>({w:w.replace(/[^\p{L}\p{N}-]/gu,""),i})).filter(x=>x.w.length>=3);
+    if(cands.length){const c=cands[Math.floor(Math.random()*cands.length)];return {type,n,blankIdx:c.i,answer:c.w};}
+    type="say";
+  }
+  if(type==="tiles"||type==="listenTiles"){
+    const own=new Set(words.map(norm));
+    const pool=[...new Set(shuffle(allNotes().slice(0,700)).slice(0,30).flatMap(o=>o.pt.split(/\s+/)))].filter(w=>!own.has(norm(w)));
+    const extra=pool.slice(0,Math.min(4,Math.max(2,Math.round(words.length/3))));
+    return {type,n,tiles:shuffle(words.concat(extra)).map(w=>({w})),chosen:[]};
+  }
+  return {type:"say",n};
+}
+function makePic(mode){const opts=shuffle(PICS).slice(0,4);return {type:mode,opts,ans:Math.floor(Math.random()*4),pick:-1};}
+function startPractice(){
+  let pool=allNotes().filter(n=>S.cards[n.id]&&S.cards[n.id].reps>0);
+  if(pool.length<8)pool=allNotes().slice(0,40);
+  const types=shuffle(["tiles","listenTiles","blank","say","tiles","blank","say","listenTiles","tiles"]);
+  const list=shuffle(pool).slice(0,9).map((n,k)=>makeEx(n,types[k]));
+  [2,6,10].forEach((pos,k)=>list.splice(pos,0,makePic(k===1?"picHear":"picSee")));
+  Object.assign(PR,{on:true,list,i:0,xp:0,right:0,total:0});
+  loadEx();showView("study");
+}
+function loadEx(){
+  PR.ex=PR.list[PR.i]||null;PR.answered=false;PR.ok=false;PR.typed="";
+  const e=PR.ex;if(!e)return;
+  if(e.type==="listenTiles")setTimeout(()=>say(e.n.pt),250);
+  if(e.type==="picHear")setTimeout(()=>say(e.opts[e.ans][1]),250);
+}
+function exAnswer(e){return e.n?e.n.pt:e.opts[e.ans][1];}
+function prCheck(){
+  const e=PR.ex;if(!e||PR.answered)return;let ok=false;
+  const t=$("#prIn");if(t)PR.typed=t.value;
+  if(e.type==="tiles"||e.type==="listenTiles")ok=norm(e.chosen.map(i=>e.tiles[i].w).join(" "))===norm(e.n.pt);
+  else if(e.type==="blank")ok=norm(PR.typed)===norm(e.answer);
+  else if(e.type==="say"){if(!PR.typed.trim())return;const r=check(PR.typed,e.n.pt);e.res=r;ok=!!r&&(r.ok||r.pct>=0.85||(!!e.n.f&&norm(PR.typed)===norm(e.n.f)));}
+  else ok=e.pick===e.ans;
+  PR.answered=true;PR.ok=ok;PR.total++;
+  if(ok){PR.right++;PR.xp+=5;addXP(5);}
+  else{
+    if(!e.retry)PR.list.push(Object.assign({},e,{retry:true,chosen:[],pick:-1,res:null}));
+    if(e.n&&S.cards[e.n.id]&&S.cards[e.n.id].reps>0)S.cards[e.n.id].due=Date.now();
+  }
+  save();renderStudy();say(exAnswer(e));
+}
+function renderPractice(v){
+  const e=PR.ex;
+  if(!e){
+    v.innerHTML=`<div class="card" style="min-height:0;text-align:center">${WAVE}<h2>Treino concluído!</h2><p class="muted">${PR.right} of ${PR.total} correct. +${PR.xp+15} XP including the round bonus.</p><p class="small muted">Sentences you missed are back in your reviews.</p><div class="row" style="justify-content:center;flex-wrap:wrap;margin-top:10px"><button class="btn" data-act="practice">Another round</button><button class="btn quiet" data-act="prExit">Done</button></div></div>`;
+    return;
+  }
+  const head=`<div class="prhead"><button class="icon" style="background:none;color:var(--muted)" data-act="prExit" aria-label="Exit practice">✕</button><div class="bar"><i style="width:${PR.i/PR.list.length*100}%;background:var(--ipe)"></i></div><span class="small"><b id="xpnow">${L().xp||0}</b> XP</span></div>`;
+  const play=`<button class="icon" data-act="prPlay" aria-label="Play audio">${ICON.play}</button>`;
+  let title="",body="",canCheck=true,needsCheck=true;
+  if(e.type==="tiles"||e.type==="listenTiles"){
+    title=e.type==="tiles"?"Build the sentence":"Listen and build what you hear";
+    const tile=(i,zone)=>`<button class="tile" data-act="tile" data-i="${i}" data-zone="${zone}">${esc(e.tiles[i].w)}</button>`;
+    body=`${e.type==="tiles"?`<p class="prompt">${esc(e.n.en)}</p>`:`<div class="row">${play}<span class="muted small">${PR.answered?esc(e.n.en):"Tap to hear it again"}</span></div>`}
+      <div id="ansZone" class="zone">${e.chosen.map(i=>tile(i,"ans")).join("")||`<span class="muted small" style="align-self:center">Tap or drag words here</span>`}</div>
+      <div class="zone bank">${e.tiles.map((t,i)=>e.chosen.includes(i)?`<span class="tile ghost">${esc(t.w)}</span>`:tile(i,"bank")).join("")}</div>`;
+    canCheck=e.chosen.length>0;
+  }else if(e.type==="blank"){
+    title="Fill the gap";
+    const shown=e.n.pt.split(/\s+/).map((w,i)=>i===e.blankIdx?w.replace(e.answer,"_____"):w).join(" ");
+    body=`<p class="prompt">${esc(shown)}</p><p class="muted">${esc(e.n.en)}</p>
+      <div class="inputrow"><input class="text" id="prIn" placeholder="Type the missing word" autocomplete="off" autocapitalize="off" spellcheck="false" value="${esc(PR.typed)}" ${PR.answered?"disabled":""}>${SR&&!PR.answered?`<button class="icon" data-act="micPr" aria-label="Speak">${ICON.mic}</button>`:""}</div>`;
+  }else if(e.type==="say"){
+    title=SR?"Say it, or type it, in Portuguese":"Type it in Portuguese";
+    body=`<p class="prompt">${esc(e.n.en)}</p>
+      <div class="inputrow"><input class="text" id="prIn" placeholder="Em português…" autocomplete="off" autocapitalize="off" spellcheck="false" value="${esc(PR.typed)}" ${PR.answered?"disabled":""}>${SR&&!PR.answered?`<button class="icon" data-act="micPr" aria-label="Speak">${ICON.mic}</button>`:""}</div>
+      ${PR.answered?"":`<div class="accents">${"áâãàéêíóôõúç".split("").map(ch=>`<button data-act="accent" data-ch="${ch}">${ch}</button>`).join("")}</div>`}`;
+  }else if(e.type==="picSee"){
+    title="What’s this in Portuguese?";needsCheck=false;
+    body=`<div class="bigpic" aria-hidden="true">${e.opts[e.ans][0]}</div><div class="picopts">${e.opts.map((o,k)=>`<button data-act="picPick" data-k="${k}" class="${PR.answered?(k===e.ans?"right":k===e.pick?"wrong":""):""}" ${PR.answered?"disabled":""}>${esc(o[1])}</button>`).join("")}</div>`;
+  }else{
+    title="Which picture did you hear?";needsCheck=false;
+    body=`<div class="row" style="margin-bottom:12px">${play}<span class="muted small">Tap to hear it again</span></div><div class="picopts emo">${e.opts.map((o,k)=>`<button data-act="picPick" data-k="${k}" aria-label="${esc(o[2])}" class="${PR.answered?(k===e.ans?"right":k===e.pick?"wrong":""):""}" ${PR.answered?"disabled":""}>${o[0]}</button>`).join("")}</div>`;
+  }
+  let fb="";
+  if(PR.answered){
+    const ans=exAnswer(e), en=e.n?e.n.en:e.opts[e.ans][2];
+    let extra="";
+    if(e.type==="say"&&e.res&&!e.res.ok&&e.res.words)extra=`<p class="feedback" style="margin-top:6px">${e.res.words.map(x=>x.hit?`<span class="hit">${esc(x.w)}</span>`:`<span class="miss">${esc(x.w)}</span>`).join(" ")}</p>`;
+    fb=`<div class="fb ${PR.ok?"ok":"bad"}"><b>${PR.ok?"Isso! +5 XP":"Quase. It comes back at the end."}</b><div class="row" style="margin-top:8px;align-items:flex-start"><div class="grow"><p style="font-weight:700">${esc(ans)}</p><p class="small muted">${esc(en)}</p>${extra}</div>${play}</div></div>
+      <button class="btn wide" style="margin-top:12px" data-act="prNext">Continue</button>`;
+  }
+  v.innerHTML=head+`<div class="card" style="min-height:0"><p class="mode">${title}${e.retry?'<span class="badge">retry</span>':""}</p>${body}</div>`
+    +(PR.answered?fb:needsCheck?`<button class="btn wide" style="margin-top:14px" data-act="prCheck" ${canCheck?"":"disabled"}>Check</button>`:"");
+  const inp=$("#prIn");if(inp&&!PR.answered){inp.addEventListener("input",()=>PR.typed=inp.value);inp.addEventListener("keydown",ev=>{if(ev.key==="Enter"){ev.preventDefault();prCheck();}});}
+}
+/* drag tiles between bank and answer */
+let DRAG=null;
+document.addEventListener("pointerdown",e=>{const t=e.target.closest(".tile");if(!t||!PR.on||PR.answered||t.classList.contains("ghost"))return;DRAG={el:t,x:e.clientX,y:e.clientY,moved:false};});
+document.addEventListener("pointermove",e=>{if(!DRAG)return;const dx=e.clientX-DRAG.x,dy=e.clientY-DRAG.y;if(!DRAG.moved&&Math.hypot(dx,dy)<8)return;DRAG.moved=true;DRAG.el.style.transform=`translate(${dx}px,${dy}px)`;DRAG.el.style.zIndex=5;});
+document.addEventListener("pointerup",e=>{
+  if(!DRAG)return;const d=DRAG;DRAG=null;if(!d.moved)return;
+  PR.justDragged=true;setTimeout(()=>{PR.justDragged=false;},350);
+  const zone=$("#ansZone");if(!zone){renderStudy();return;}
+  const r=zone.getBoundingClientRect(), inAns=e.clientY>=r.top-10&&e.clientY<=r.bottom+24;
+  const i=+d.el.dataset.i, from=d.el.dataset.zone, ex=PR.ex;
+  if(from==="bank"&&inAns&&!ex.chosen.includes(i))ex.chosen.push(i);
+  else if(from==="ans"&&!inAns)ex.chosen=ex.chosen.filter(x=>x!==i);
+  renderStudy();
+});
+document.addEventListener("pointercancel",()=>{if(DRAG){DRAG.el.style.transform="";DRAG=null;}});
 function renderStudy(){
   const v=$("#v-study");
   if(LS.on){
@@ -600,6 +742,7 @@ function renderStudy(){
     <button class="btn wide quiet" style="margin-top:14px" data-act="listenStop">Stop</button>`;
     return;
   }
+  if(PR.on){renderPractice(v);return;}
   if(!ST.built)buildQueue();
   if(!ST.cur&&ST.queue.length)nextCard();
   const due=dueNotes().length, fresh=Math.min(freshLeft(),freshNotes(999).length)+learningNotes().length;
@@ -626,7 +769,8 @@ function renderStudy(){
       `<p class="feedback">${ST.fb.words.map(x=>x.hit?`<span class="hit">${esc(x.w)}</span>`:`<span class="miss">${esc(x.w)}</span>`).join(" ")}</p><p class="small muted">You wrote: ${esc(ST.typed)}</p>`;}
     answer=`<div class="answer"><p class="pt">${esc(n.pt)}</p><p class="en">${esc(n.en)}</p>${n.f?`<p class="small muted" style="margin-top:6px">Textbook: <s>${esc(n.f)}</s></p>`:""}${fb?`<div style="margin-top:8px">${fb}</div>`:""}</div>`;
   }
-  const rates=ST.revealed?`<div class="rates">${[["Again","r1",1],["Hard","r2",2],["Good","r3",3],["Easy","r4",4]].map(([t,cl,r])=>`<button class="rate ${cl}" data-act="rate" data-r="${r}">${t}<small>${nextState(c,r).label}</small></button>`).join("")}</div>`
+  let sug=0;if(ST.fb){if(ST.fb.textbook)sug=2;else if(ST.fb.ok)sug=3;else sug=ST.fb.pct>=0.7?2:1;}
+  const rates=ST.revealed?`<p class="small muted" style="margin-top:14px;text-align:center">How well did you know it? This sets when you see it again.</p><div class="rates" style="margin-top:8px">${[["Forgot","r1",1],["Struggled","r2",2],["Got it","r3",3],["Too easy","r4",4]].map(([t,cl,r])=>`<button class="rate ${cl} ${sug===r?"sug":""}" data-act="rate" data-r="${r}">${t}<small>${nextState(c,r).label==="<10m"?"again now":"in "+nextState(c,r).label}</small></button>`).join("")}</div>`
     :`<button class="btn wide" style="margin-top:14px" data-act="reveal">${mode==="produce"?"Check":"Show answer"}</button>`;
   v.innerHTML=head+`<article class="card"><div class="row between"><p class="mode">${modeLbl}${isNew?'<span class="badge">new</span>':""}</p><span class="small muted">${esc(n.u||"")}</span></div><div class="row" style="align-items:flex-start"><div class="grow">${prompt}</div>${playBtn}</div>${input}${answer}</article>${rates}`;
   if(!ST.revealed&&mode!=="produce"&&!ST.autoplayed){ST.autoplayed=true;say(n.pt);}
@@ -635,7 +779,7 @@ function renderStudy(){
 function doneHTML(){
   const remaining=freshNotes(99999).length;
   return `<div class="card" style="min-height:0"><h2>Tudo feito aqui</h2><p class="muted">${remaining?`${remaining} sentences still waiting in your course.`:"You’ve started every sentence you have. Build the full course or generate a set below."} Reviews come back right before you’d forget them.</p>
-  <div class="row" style="flex-wrap:wrap"><button class="btn quiet" data-act="more" ${remaining?"":"disabled"}>Learn 10 more today</button><button class="btn quiet" data-act="handsfree">Hands-free drill</button></div></div>
+  <div class="row" style="flex-wrap:wrap"><button class="btn green" data-act="practice">Active practice</button><button class="btn quiet" data-act="more" ${remaining?"":"disabled"}>Learn 10 more today</button><button class="btn quiet" data-act="handsfree">Hands-free drill</button></div></div>
   ${missionHTML("Up next")}
   <h2 class="section-title">More sentences</h2>
   ${courseHTML()}
@@ -920,13 +1064,21 @@ const A={
   imm:b=>{const m=Number(b.dataset.m);L().imm+=m;addXP(m);save();renderToday();toast(`Immersion logged, +${m} XP`);},
   handsfree:()=>startListen(),
   mission:()=>{if(MISSION)MISSION.go();},
+  practice:()=>startPractice(),
+  prExit:()=>{PR.on=false;hush();renderStudy();},
+  prCheck:()=>prCheck(),
+  prPlay:()=>{if(PR.ex)say(exAnswer(PR.ex));},
+  prNext:()=>{PR.i++;if(PR.i>=PR.list.length){L().active=(L().active||0)+1;addXP(15);save();}loadEx();renderStudy();window.scrollTo(0,0);},
+  picPick:b=>{if(PR.answered)return;PR.ex.pick=+b.dataset.k;prCheck();},
+  tile:b=>{if(PR.justDragged||PR.answered)return;const i=+b.dataset.i,ex=PR.ex;if(b.dataset.zone==="bank"){if(!ex.chosen.includes(i))ex.chosen.push(i);}else ex.chosen=ex.chosen.filter(x=>x!==i);renderStudy();},
+  micPr:()=>startMic(t=>{const i=$("#prIn");if(i){i.value=t;PR.typed=t;}}),
   celeClose:()=>{$("#celehost").innerHTML="";},
   course:()=>{CB.running?stopCourse():buildCourse();},
   listenStop:()=>stopListen(),
   play:()=>{const n=noteById(ST.cur);if(n)say(n.pt);},
   reveal:()=>doReveal(),
   rate:b=>doRate(Number(b.dataset.r)),
-  accent:b=>{const t=$("#typed");if(!t)return;const s=t.selectionStart??t.value.length,e=t.selectionEnd??s;t.value=t.value.slice(0,s)+b.dataset.ch+t.value.slice(e);ST.typed=t.value;t.focus();t.setSelectionRange(s+1,s+1);},
+  accent:b=>{const t=$("#typed")||$("#prIn");if(!t)return;const s=t.selectionStart??t.value.length,e=t.selectionEnd??s;t.value=t.value.slice(0,s)+b.dataset.ch+t.value.slice(e);ST.typed=t.value;PR.typed=t.value;t.focus();t.setSelectionRange(s+1,s+1);},
   micCard:()=>startMic(txt=>{const t=$("#typed");if(t){t.value=txt;ST.typed=txt;}}),
   more:()=>{L().bonus=(L().bonus||0)+10;save();ST.built=false;renderStudy();},
   topic:b=>{const t=$("#topic");if(t)t.value=b.dataset.t;genCards(b.dataset.t);},
