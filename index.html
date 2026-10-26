@@ -192,6 +192,24 @@ details li+li{margin-top:6px}
 .tabs button{border:0;background:none;padding:8px 2px 10px;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:.72rem;color:var(--muted);min-height:60px}
 .tabs button svg{width:24px;height:24px}
 .tabs button.on{color:var(--mata);font-weight:700}
+.top{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-top:12px}
+.rank{text-align:right;min-width:0}
+.rank b{font-family:"Familjen Grotesk",sans-serif;font-size:1.05rem;display:block}
+.rank .bar{width:140px;margin-left:auto;margin-top:6px}
+.daybar{display:flex;justify-content:space-between;font-size:.9rem;margin:18px 0 6px}
+.daybar b{font-family:"Familjen Grotesk",sans-serif}
+.mission{background:var(--surface);border:2px solid var(--ipe);border-radius:18px;padding:18px;margin-top:16px}
+.mission .k{font-size:.85rem;color:var(--muted)}
+.mission .t{font-family:"Familjen Grotesk",sans-serif;font-size:1.45rem;font-weight:600;line-height:1.2;margin:2px 0 4px}
+.xpchip{display:inline-block;background:var(--ipe);color:var(--ipe-ink);border-radius:6px;padding:1px 8px;font-size:.78rem;font-weight:700;flex:none}
+.trail .item.cur{background:var(--mata-soft)}
+.trail .lock{width:26px;height:26px;border-radius:50%;border:2px dashed var(--line);flex:none}
+.combo{color:var(--roxo);font-weight:700}
+.cele{position:fixed;inset:0;background:rgba(0,0,0,.5);display:grid;place-items:center;z-index:50;padding:24px}
+.cele .box{background:var(--surface);border-radius:20px;padding:26px 22px;max-width:360px;width:100%;text-align:center;animation:pop .28s ease-out}
+.cele .wave{height:36px;margin-bottom:16px}
+.cele h2{font-size:1.6rem;margin-bottom:8px}
+@keyframes pop{from{transform:scale(.85);opacity:0}to{transform:scale(1);opacity:1}}
 @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
@@ -211,7 +229,10 @@ details li+li{margin-top:6px}
   <button data-tab="progress"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 20V12M12 20V5M19 20v-6"/></svg>Progresso</button>
 </div></nav>
 <div class="toast" id="toast" role="status"></div>
+<div id="celehost"></div>
 
+<script>const COURSE_DATA=[];</script>
+<script src="c1.js"></script><script src="c2.js"></script><script src="c3.js"></script><script src="c4.js"></script><script src="c5.js"></script>
 <script>
 /* ================= CONTENT ================= */
 const UNITS=[
@@ -314,7 +335,7 @@ const PHASES=[
 
 /* ================= STATE ================= */
 const KEY="fala-v1", DAY=864e5, END=new Date(2027,0,30).getTime();
-function defaults(){return {v:1,updated:0,cards:{},ai:[],newPerDay:20,target:90,rate:0.95,voice:"",theme:"auto",autoplay:true,apiKey:"",log:{},gram:{}};}
+function defaults(){return {v:1,updated:0,cards:{},ai:[],newPerDay:20,target:90,rate:0.95,voice:"",theme:"auto",autoplay:true,apiKey:"",provider:"anthropic",localUrl:"",localModel:"",xp:0,xpGoal:400,courseDone:[],log:{},gram:{}};}
 function load(){try{const s=JSON.parse(localStorage.getItem(KEY)||"null");if(s&&s.v){Object.keys(s.cards||{}).forEach(k=>{if(/^u\d/.test(k))delete s.cards[k];});return Object.assign(defaults(),s);}}catch(e){}return defaults();}
 let S=load();
 const $=(s,el=document)=>el.querySelector(s);
@@ -323,7 +344,7 @@ const wait=ms=>new Promise(r=>setTimeout(r,ms));
 function dkey(d=new Date()){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
 function midnight(d=new Date()){const x=new Date(d);x.setHours(0,0,0,0);return x.getTime();}
 function daysLeft(){return Math.max(0,Math.round((END-midnight())/DAY));}
-function L(k=dkey()){return S.log[k]||(S.log[k]={sec:0,rev:0,nw:0,bonus:0,shadow:0,chat:0,gram:0,imm:0});}
+function L(k=dkey()){return S.log[k]||(S.log[k]={sec:0,rev:0,nw:0,bonus:0,shadow:0,chat:0,gram:0,imm:0,xp:0});}
 let saveT=null;
 function save(){S.updated=Date.now();try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}syncSoon();}
 function saveSoon(){clearTimeout(saveT);saveT=setTimeout(save,700);}
@@ -331,10 +352,12 @@ function toast(t){const el=$("#toast");el.textContent=t;el.classList.add("on");c
 function applyTheme(){if(S.theme==="auto")document.documentElement.removeAttribute("data-theme");else document.documentElement.dataset.theme=S.theme;}
 applyTheme();
 
-let NOTES=null;
+let NOTES=null, NOTESET=null;
 function allNotes(){
-  if(!NOTES){NOTES=[];UNITS.forEach((u,ui)=>u.items.forEach((it,ii)=>NOTES.push({id:"c"+ui+"-"+ii,pt:it[0],en:it[1],f:it[2]||"",u:u.t})));}
-  return NOTES.concat(S.ai);
+  if(!NOTES){NOTES=[];NOTESET=new Set();
+    UNITS.forEach((u,ui)=>u.items.forEach((it,ii)=>{NOTESET.add(norm(it[0]));NOTES.push({id:"c"+ui+"-"+ii,pt:it[0],en:it[1],f:it[2]||"",u:u.t});}));
+    (typeof COURSE_DATA!=="undefined"?COURSE_DATA:[]).forEach((u,ui)=>u.items.forEach((it,ii)=>{const k=norm(it[0]);if(NOTESET.has(k))return;NOTESET.add(k);NOTES.push({id:"k"+ui+"-"+ii,pt:it[0],en:it[1],f:it[2]||"",u:u.t,l:u.l});}));}
+  return NOTES.concat(S.ai.filter(n=>!NOTESET.has(norm(n.pt))));
 }
 function noteById(id){return allNotes().find(n=>n.id===id);}
 
@@ -364,11 +387,26 @@ async function push(){
 
 /* ================= CLAUDE (sample) ================= */
 let SAMPLE=null, SAMPLE_READY=true;
-function setupAI(){SAMPLE=S.apiKey?{json:apiJson}:null;}
+function setupAI(){SAMPLE=(S.provider==="local"?(S.localUrl&&S.localModel):S.apiKey)?{json:aiJson}:null;}
+function parseJSONText(text){
+  const clean=text.replace(/```json|```/g,"").trim();
+  const m=clean.match(/[\[{][\s\S]*[\]}]/);
+  try{return JSON.parse(m?m[0]:clean);}catch(e){throw {code:"bad"};}
+}
+function aiJson(prompt,opts={}){return S.provider==="local"?localJson(prompt):apiJson(prompt,opts);}
+async function localJson(prompt){
+  let res;
+  try{res=await fetch(S.localUrl.replace(/\/+$/,"")+"/api/chat",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({model:S.localModel,stream:false,options:{temperature:0.7},messages:[{role:"user",content:prompt}]})});}
+  catch(e){throw {code:"local_down"};}
+  if(res.status===404)throw {code:"local_model"};
+  if(!res.ok)throw {code:"http",message:String(res.status)};
+  const data=await res.json();
+  return parseJSONText((data.message&&data.message.content)||"");
+}
 async function apiJson(prompt,opts={}){
   const model=opts.modelTier==="quick"?"claude-haiku-5-5":"claude-sonnet-5-5";
   let res;
-  try{res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"content-type":"application/json","x-api-key":S.apiKey,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model,max_tokens:2000,messages:[{role:"user",content:prompt}]})});}
+  try{res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"content-type":"application/json","x-api-key":S.apiKey,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model,max_tokens:4000,messages:[{role:"user",content:prompt}]})});}
   catch(e){throw {code:"network"};}
   if(res.status===401||res.status===403)throw {code:"bad_key"};
   if(res.status===429||res.status===529)throw {code:"rate_limited"};
@@ -383,6 +421,9 @@ setupAI();
 function aiError(e){
   const c=e&&e.code;
   if(c==="bad_key")return "Your API key was rejected. Check it in Progresso, Settings.";
+  if(c==="local_down")return "Can’t reach your Mac. Check it’s awake, Ollama is running and Tailscale is on.";
+  if(c==="local_model")return "Your Mac doesn’t have that model. Check the model name in Progresso.";
+  if(c==="bad")return "The reply wasn’t usable. Try again; small local models slip up sometimes.";
   if(c==="network")return "No connection. AI features need internet; everything else works offline.";
   if(c==="rate_limited")return "Too many requests at once. Wait a minute, then try again.";
   return "Claude didn’t answer. Check your connection and try again.";
@@ -476,25 +517,67 @@ function check(typed,target){
 /* ================= RENDER: TODAY ================= */
 function curPhase(){const k=dkey();let idx=PHASES.findIndex(p=>k>=p.from&&k<=p.to);if(idx<0)idx=k<PHASES[0].from?0:PHASES.length-1;return idx;}
 function tickHTML(done){return `<span class="tick ${done?"done":""}">${done?ICON.check:""}</span>`;}
+const WAVE=`<svg class="wave" aria-hidden="true" preserveAspectRatio="none"><defs><pattern id="wv" width="64" height="26" patternUnits="userSpaceOnUse"><path d="M-2 13 Q14 -1 31 13 T64 13 T97 13" fill="none" style="stroke:var(--wave)" stroke-width="8"/></pattern></defs><rect width="100%" height="100%" fill="url(#wv)"/></svg>`;
+const RANKS=[[0,"Turista"],[1000,"Gringo curioso"],[3000,"Gringo esperto"],[7000,"Quase local"],[12000,"Paulistano honorário"],[20000,"Fala fluente"],[32000,"Brasileiro de coração"]];
+function rankOf(x){let i=0;RANKS.forEach((r,k)=>{if(x>=r[0])i=k;});return i;}
+function celebrate(title,body){
+  $("#celehost").innerHTML=`<div class="cele" role="dialog" aria-modal="true"><div class="box">${WAVE}<h2>${esc(title)}</h2><p class="muted">${esc(body)}</p><button class="btn wide" style="margin-top:18px" data-act="celeClose">Bora!</button></div></div>`;
+}
+function addXP(n){
+  if(!n)return;const before=S.xp||0,l=L(),dayBefore=l.xp||0;
+  S.xp=before+n;l.xp=dayBefore+n;saveSoon();
+  const el=$("#xpnow");if(el)el.textContent=l.xp;
+  if(dayBefore<S.xpGoal&&l.xp>=S.xpGoal)setTimeout(()=>celebrate("Meta do dia batida!",`${l.xp} XP today. Streak: ${streak()} ${streak()===1?"day":"days"}. Anything more is bonus.`),350);
+  else if(rankOf(S.xp)>rankOf(before))setTimeout(()=>celebrate("Novo nível: "+RANKS[rankOf(S.xp)][1],`${S.xp} XP in total. Next rank at ${(RANKS[rankOf(S.xp)+1]||["—"])[0]} XP.`),350);
+}
+function unitGroups(){
+  const map=new Map();
+  allNotes().forEach(n=>{const k=n.u||"Extra";if(!map.has(k))map.set(k,{t:k,total:0,seen:0});const g=map.get(k);g.total++;if(S.cards[n.id])g.seen++;});
+  return [...map.values()];
+}
+function curUnitIdx(gs){const i=gs.findIndex(g=>g.seen<g.total);return i<0?gs.length-1:i;}
+function nextGrammarIdx(){const i=GRAMMAR.findIndex(g=>(S.gram[g.id]||0)<0.8);return i<0?0:i;}
+let MISSION=null;
+function nextMission(){
+  const l=L(), due=dueNotes().length, left=Math.min(freshLeft(),freshNotes(99999).length)+learningNotes().length;
+  const gs=unitGroups();
+  if(due)return {k:"Reviews first, before you forget them",t:`Clear ${due} review${due===1?"":"s"}`,s:`About ${Math.max(1,Math.ceil(due*8/60))} min.`,xp:"+5 XP each",btn:"Start reviews",go:()=>showView("study")};
+  if(left)return {k:"New material",t:`Learn ${left} new sentence${left===1?"":"s"}`,s:`From “${gs[curUnitIdx(gs)].t}”.`,xp:"+10 XP each",btn:"Start learning",go:()=>showView("study")};
+  if(SAMPLE&&l.chat<10)return {k:"Speaking practice",t:"Talk to Bia",s:`${10-l.chat} more message${10-l.chat===1?"":"s"} today. Pick any scenario.`,xp:"+15 XP each",btn:"Open chat",go:()=>{SP.mode="chat";showView("speak");}};
+  if(l.shadow<1)return {k:"Pronunciation",t:"Shadow one dialogue",s:"Repeat each line out loud in the pauses.",xp:"+30 XP",btn:"Pick a dialogue",go:()=>{SP.mode="shadow";showView("speak");}};
+  if(l.gram<1){const gi=nextGrammarIdx();return {k:"Grammar",t:GRAMMAR[gi].t,s:"Read the rule, then do one set of 6.",xp:"+20 XP and up",btn:"Start the set",go:()=>{GR.u=gi;GR.list=null;showView("grammar");}};}
+  if((l.xp||0)<S.xpGoal)return {k:"Almost there",t:`${S.xpGoal-(l.xp||0)} XP to today’s goal`,s:"Hands-free drill, or log some immersion below.",xp:"+2 XP per sentence",btn:"Hands-free drill",go:()=>startListen()};
+  return {k:"Dia completo",t:"You’re done for today",s:"Everything’s ticked. Extra time is best spent on Brazilian content: a podcast, an episode, a playlist.",xp:"bonus",btn:"Bonus drill",go:()=>startListen()};
+}
+function missionHTML(label){
+  MISSION=nextMission();const m=MISSION;
+  return `<div class="mission"><div class="row between"><span class="k">${esc(label||m.k)}</span><span class="xpchip">${esc(m.xp)}</span></div><p class="t">${esc(m.t)}</p><p class="small muted">${esc(m.s)}</p><button class="btn wide" style="margin-top:14px" data-act="mission">${esc(m.btn)}</button></div>`;
+}
 function renderToday(){
-  const l=L(), due=dueNotes().length, ph=PHASES[curPhase()], mins=Math.round(l.sec/60), left=daysLeft();
+  const l=L(), due=dueNotes().length, ph=PHASES[curPhase()], left=daysLeft(), xp=S.xp||0, ri=rankOf(xp);
+  const nextR=RANKS[ri+1], rankPct=nextR?(xp-RANKS[ri][0])/(nextR[0]-RANKS[ri][0])*100:100;
   const newDone=freshLeft()===0&&learningNotes().length===0;
-  $("#v-today").innerHTML=`
-  <svg class="wave" aria-hidden="true" preserveAspectRatio="none"><defs><pattern id="wv" width="64" height="26" patternUnits="userSpaceOnUse"><path d="M-2 13 Q14 -1 31 13 T64 13 T97 13" fill="none" style="stroke:var(--wave)" stroke-width="8"/></pattern></defs><rect width="100%" height="100%" fill="url(#wv)"/></svg>
-  <div class="count"><span class="num">${left}</span><span class="lbl">${left===1?"dia":"dias"} até 30 de janeiro. Day ${Math.max(1,97-left)} of 96.</span></div>
-  <div class="phase"><h3>Fase ${curPhase()+1}: ${esc(ph.n)}</h3><p class="small">${esc(ph.f)}</p></div>
-  <div class="row between section-title"><h2>Hoje</h2><span class="muted small">${mins} of ${S.target} min</span></div>
-  <div class="bar" style="margin-bottom:14px"><i style="width:${Math.min(100,mins/S.target*100)}%"></i></div>
+  const gs=unitGroups(), cu=curUnitIdx(gs), from=Math.max(0,cu-1), shown=gs.slice(from,from+5);
+  const row=(done,t,s,xpTxt,act,extra="")=>`<button class="item" data-act="${act}" ${extra}>${tickHTML(done)}<span class="grow"><span class="t">${t}</span><br><span class="s">${s}</span></span><span class="xpchip">${xpTxt}</span></button>`;
+  $("#v-today").innerHTML=`${WAVE}
+  <div class="top"><div class="count" style="margin-top:0"><span class="num" style="font-size:4.2rem">${left}</span><span class="lbl">${left===1?"dia":"dias"} até 30 de janeiro</span></div>
+    <div class="rank"><span class="small muted">${xp} XP</span><b>${esc(RANKS[ri][1])}</b><div class="bar"><i style="width:${rankPct}%"></i></div><span class="small muted">${nextR?`${nextR[0]-xp} XP to ${esc(nextR[1])}`:"Top rank"}</span></div></div>
+  <div class="daybar"><span>Today <b id="xpnow">${l.xp||0}</b> / ${S.xpGoal} XP</span><span class="muted">${streak()}-day streak</span></div>
+  <div class="bar"><i style="width:${Math.min(100,(l.xp||0)/S.xpGoal*100)}%;background:var(--ipe)"></i></div>
+  ${missionHTML()}
+  <h2 class="section-title">Today’s plan</h2>
   <div class="list">
-    <button class="item" data-act="go" data-to="study">${tickHTML(due===0&&l.rev>0)}<span class="grow"><span class="t">Reviews</span><br><span class="s">${due} due now</span></span></button>
-    <button class="item" data-act="go" data-to="study">${tickHTML(newDone)}<span class="grow"><span class="t">New sentences</span><br><span class="s">${l.nw} of ${S.newPerDay+(l.bonus||0)} learned today</span></span></button>
-    <button class="item" data-act="goSpeak" data-mode="chat">${tickHTML(l.chat>=10)}<span class="grow"><span class="t">Conversation</span><br><span class="s">${l.chat} of 10 messages to Bia</span></span></button>
-    <button class="item" data-act="goSpeak" data-mode="shadow">${tickHTML(l.shadow>=1)}<span class="grow"><span class="t">Shadowing</span><br><span class="s">Repeat one dialogue out loud</span></span></button>
-    <button class="item" data-act="go" data-to="grammar">${tickHTML(l.gram>=1)}<span class="grow"><span class="t">Grammar drill</span><br><span class="s">One short set</span></span></button>
-    <div class="item">${tickHTML(l.imm>=20)}<span class="grow"><span class="t">Immersion</span><br><span class="s">${l.imm} min of podcasts, series or music</span></span><button class="chip" data-act="imm" data-m="10">+10</button><button class="chip" data-act="imm" data-m="30">+30</button></div>
+    ${row(due===0&&l.rev>0,"Reviews",`${due} due now`,"+5 each","go",'data-to="study"')}
+    ${row(newDone,"New sentences",`${l.nw} of ${S.newPerDay+(l.bonus||0)} learned`,"+10 each","go",'data-to="study"')}
+    ${row(l.chat>=10,"Talk to Bia",SAMPLE?`${l.chat} of 10 messages`:"Set up AI in Progresso","+15 each","goSpeak",'data-mode="chat"')}
+    ${row(l.shadow>=1,"Shadowing","Repeat one dialogue out loud","+30","goSpeak",'data-mode="shadow"')}
+    ${row(l.gram>=1,"Grammar set","One set of 6 questions","+20","go",'data-to="grammar"')}
+    <div class="item">${tickHTML(l.imm>=20)}<span class="grow"><span class="t">Immersion</span><br><span class="s">${l.imm} min logged, +1 XP a minute</span></span><button class="chip" data-act="imm" data-m="10">+10</button><button class="chip" data-act="imm" data-m="30">+30</button></div>
   </div>
-  <button class="btn wide" style="margin-top:16px" data-act="handsfree">Hands-free audio drill (walking, commuting)</button>
-  <p class="note">Plays English, pauses for you to say it in Portuguese, then plays the answer. Keep the screen on; most phones stop speech when locked.</p>
+  <div class="row between section-title"><h2>A trilha</h2><span class="muted small">Unit ${cu+1} of ${gs.length}</span></div>
+  <div class="list trail">${shown.map((g,k)=>{const i=from+k,done=g.seen>=g.total,cur=i===cu;
+    return `<div class="item ${cur?"cur":""}">${done?tickHTML(true):cur?`<span class="tick" style="border-color:var(--mata)"></span>`:`<span class="lock"></span>`}<span class="grow"><span class="t">${esc(g.t)}</span><br><span class="s">${done?"Done":cur?`${g.seen} of ${g.total} started`:`${g.total} sentences`}</span></span></div>`;}).join("")}</div>
+  <div class="phase"><h3>Fase ${curPhase()+1}: ${esc(ph.n)}</h3><p class="small">${esc(ph.f)}</p></div>
   <details style="margin-top:16px"><summary>What to listen to</summary><ul>
     <li>Podcasts: Speaking Brazilian, Carioca Connection</li>
     <li>YouTube: Easy Portuguese (street interviews), Portuguese With Leo</li>
@@ -520,7 +603,7 @@ function renderStudy(){
   if(!ST.built)buildQueue();
   if(!ST.cur&&ST.queue.length)nextCard();
   const due=dueNotes().length, fresh=Math.min(freshLeft(),freshNotes(999).length)+learningNotes().length;
-  const head=`<div class="studyhead"><span><b>${due}</b> to review</span><span><b>${fresh}</b> new</span><span class="grow"></span><button class="link" data-act="handsfree">Hands-free</button></div>`;
+  const head=`<div class="studyhead"><span><b>${due}</b> to review</span><span><b>${fresh}</b> new</span>${(ST.combo||0)>=3?`<span class="combo">Combo ${ST.combo}</span>`:""}<span class="grow"></span><span><b id="xpnow">${L().xp||0}</b>/${S.xpGoal} XP</span></div>`;
   if(!ST.cur){v.innerHTML=head+doneHTML();return;}
   const n=noteById(ST.cur);if(!n){nextCard();return renderStudy();}
   const c=S.cards[n.id], mode=modeFor(c), isNew=!c.reps;
@@ -550,15 +633,18 @@ function renderStudy(){
   const t=$("#typed");if(t){t.addEventListener("input",()=>ST.typed=t.value);t.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();doReveal();}});}
 }
 function doneHTML(){
-  const remaining=freshNotes(9999).length;
-  return `<div class="card" style="min-height:0"><h2>Tudo feito por agora</h2><p class="muted">${remaining?`${remaining} sentences left in your deck.`:"You’ve started every sentence in your deck. Generate a new set below."} Reviews come back when you’re about to forget them.</p>
-  <div class="row" style="flex-wrap:wrap"><button class="btn green" data-act="more" ${remaining?"":"disabled"}>Learn 10 more</button><button class="btn quiet" data-act="handsfree">Hands-free drill</button></div></div>
-  <h2 class="section-title">Generate a new set</h2>
+  const remaining=freshNotes(99999).length;
+  return `<div class="card" style="min-height:0"><h2>Tudo feito aqui</h2><p class="muted">${remaining?`${remaining} sentences still waiting in your course.`:"You’ve started every sentence you have. Build the full course or generate a set below."} Reviews come back right before you’d forget them.</p>
+  <div class="row" style="flex-wrap:wrap"><button class="btn quiet" data-act="more" ${remaining?"":"disabled"}>Learn 10 more today</button><button class="btn quiet" data-act="handsfree">Hands-free drill</button></div></div>
+  ${missionHTML("Up next")}
+  <h2 class="section-title">More sentences</h2>
+  ${courseHTML()}
+  <h3 style="margin:20px 0 10px">Or one topic of your choice</h3>
   ${aiGenHTML()}`;
 }
 function aiGenHTML(){
   if(!SAMPLE_READY)return `<p class="muted small">Checking for Claude access…</p>`;
-  if(!SAMPLE)return `<p class="muted small">Add your Anthropic API key in Progresso, Settings, to turn this on. Everything else works without it.</p>`;
+  if(!SAMPLE)return `<p class="muted small">Add your API key or connect your Mac in Progresso, Settings, to turn this on. Everything else works without it.</p>`;
   return `<p class="muted small" style="margin-bottom:10px">Claude writes 15 natural sentences at your level on any topic and adds them to your deck. At 20 a day, the built-in deck lasts about two weeks, so keep it topped up.</p>
   <div class="row" style="flex-wrap:wrap;gap:8px;margin-bottom:10px">${TOPICS.map(t=>`<button class="chip" data-act="topic" data-t="${esc(t)}">${esc(t)}</button>`).join("")}</div>
   <div class="inputrow"><input class="text" id="topic" placeholder="Or type a topic, e.g. talking about rent"><button class="btn" data-act="gen" id="genbtn">Create</button></div><p class="note" id="genmsg"></p>`;
@@ -572,26 +658,53 @@ function doReveal(){
 function doRate(r){
   const id=ST.cur, c=S.cards[id];const wasReview=c.reps>0;
   const res=nextState(c,r);S.cards[id]=res.n;
-  if(wasReview)L().rev++;
+  if(wasReview){L().rev++;addXP(r===1?1:r===2?3:5);}
+  else if(!res.requeue)addXP(10);
+  if(r>=3){ST.combo=(ST.combo||0)+1;if(ST.combo%10===0){addXP(20);toast(`Combo ${ST.combo}! +20 XP`);}}else if(r===1)ST.combo=0;
   if(res.requeue)ST.queue.splice(Math.min(3,ST.queue.length),0,id);
   ST.autoplayed=false;nextCard();save();renderStudy();
+}
+async function genBatch(topic,lvl,count){
+  const existing=new Set(allNotes().map(n=>norm(n.pt)));
+  const prompt=`Write ${count} flashcard sentences for a British English speaker learning Brazilian Portuguese. Target level: ${lvl}. Topic: ${topic}.
+Write them exactly how a Brazilian in their 20s-30s from São Paulo actually SAYS them to a friend, not textbook Portuguese: cê/você, tá, tô, tava, pra, pro, né, a gente (never nós), tem (never há), pronoun before verb (me ajuda, te ligo), ele/ela as objects, dropped subjects, fillers (tipo, aí, então), reactions, diminutives and common everyday slang where natural. 3 to 12 words each, high-frequency vocabulary, varied grammar suited to ${lvl}, every one usable in a real conversation. Order from simplest to hardest. English: natural casual British English.
+For each, "book" is the stiff textbook/formal version if it differs meaningfully, else "".
+Return ONLY a JSON array: [{"pt": "...", "en": "...", "book": "..."}]`;
+  const arr=await SAMPLE.json(prompt,{modelTier:"default"});
+  let added=0;
+  if(Array.isArray(arr))arr.forEach((x,i)=>{if(x&&typeof x.pt==="string"&&typeof x.en==="string"&&x.pt.trim()&&!existing.has(norm(x.pt))){S.ai.push({id:"ai"+Date.now().toString(36)+i,pt:x.pt.trim(),en:x.en.trim(),f:(typeof x.book==="string"&&norm(x.book)!==norm(x.pt))?x.book.trim():"",u:topic.slice(0,48)});existing.add(norm(x.pt));added++;}});
+  if(!added)throw {code:"empty"};
+  return added;
 }
 async function genCards(topic){
   const btn=$("#genbtn"), msg=$("#genmsg");if(!SAMPLE||!topic)return;
   btn.disabled=true;msg.textContent="Writing your sentences…";
-  const existing=new Set(allNotes().map(n=>norm(n.pt)));
-  const prompt=`Write 15 flashcard sentences for an English speaker (British) learning Brazilian Portuguese, current level about ${level()}. Topic: ${topic}.
-Write them exactly how a Brazilian in their 20s-30s from São Paulo actually SAYS them to a friend, not textbook Portuguese: cê/você, tá, tô, tava, pra, pro, né, a gente (never nós), tem (never há), pronoun before verb (me ajuda, te ligo), ele/ela as objects, dropped subjects, fillers (tipo, aí, então), reactions, diminutives and common everyday slang where natural. 3 to 12 words each, high-frequency, varied grammar, every one usable in a real conversation. English: natural casual British English.
-For each, "book" is the stiff textbook/formal version if it differs meaningfully, else "".
-Return ONLY a JSON array: [{"pt": "...", "en": "...", "book": "..."}]`;
-  try{
-    const arr=await SAMPLE.json(prompt,{modelTier:"default"});
-    let added=0;
-    if(Array.isArray(arr))arr.forEach((x,i)=>{if(x&&typeof x.pt==="string"&&typeof x.en==="string"&&x.pt.trim()&&!existing.has(norm(x.pt))){S.ai.push({id:"ai"+Date.now().toString(36)+i,pt:x.pt.trim(),en:x.en.trim(),f:(typeof x.book==="string"&&norm(x.book)!==norm(x.pt))?x.book.trim():"",u:topic.slice(0,40)});existing.add(norm(x.pt));added++;}});
-    if(!added)throw {code:"empty"};
-    L().bonus=(L().bonus||0)+Math.min(added,10);save();ST.built=false;toast(added+" sentences added");renderStudy();
-  }catch(e){msg.textContent=e.code==="empty"?"Nothing new came back. Try a different topic.":aiError(e);btn.disabled=false;}
+  try{const added=await genBatch(topic,level(),15);L().bonus=(L().bonus||0)+Math.min(added,10);save();ST.built=false;toast(added+" sentences added");renderStudy();}
+  catch(e){msg.textContent=e.code==="empty"?"Nothing new came back. Try a different topic.":aiError(e);btn.disabled=false;}
 }
+const COURSE=[
+["A1","Apresentações e de onde você é"],["A1","Rotina da manhã"],["A1","Números, preços e pagar"],["A1","Horas e combinar horário"],["A1","Família"],["A1","Casa e apartamento"],["A1","No mercado"],["A1","Na padaria e no café"],["A1","Clima e tempo"],["A1","Transporte e direções"],["A1","Pedir comida no restaurante"],["A1","O que você curte fazer"],["A1","Como você tá se sentindo"],["A1","Roupas e compras"],["A1","Dias da semana e planos"],
+["A2","O fim de semana passado"],["A2","Infância e como era"],["A2","Trabalho e colegas"],["A2","Reclamar do dia a dia"],["A2","Academia e treino"],["A2","Boxe e luta"],["A2","Saúde e médico"],["A2","Hotel e hospedagem"],["A2","Aeroporto e voos"],["A2","Festa e balada"],["A2","Bar e boteco"],["A2","Futebol"],["A2","Música e shows"],["A2","Séries e filmes"],["A2","Celular, apps e internet"],["A2","WhatsApp e redes sociais"],["A2","Dinheiro e contas"],["A2","Aluguel e vizinhos"],["A2","Cozinhar em casa"],["A2","Encontro e paquera"],["A2","Amizade e fofoca"],["A2","Emoções e reações"],["A2","Pedir favores e desculpas"],
+["B1","Dar opinião e discordar"],["B1","Contar uma história engraçada"],["B1","Planos e sonhos"],["B1","Hipóteses: se eu fosse…"],["B1","Conselhos e sugestões"],["B1","Resolver perrengue"],["B1","Mercado imobiliário"],["B1","Carreira, tecnologia e IA"],["B1","Notícias do dia a dia"],["B1","Costumes brasileiros"],["B1","Comida regional brasileira"],["B1","Viagem pelo Brasil"],["B1","Gírias de São Paulo"],["B1","Gírias do Rio"],["B1","Expressões idiomáticas"],["B1","Falar ao telefone"],["B1","Negociar e pechinchar"],["B1","Relacionamentos"],["B1","Papo com desconhecidos"],["B1","Discutir uma série"],["B1","Explicar seu trabalho"]
+];
+const CB={running:false,token:0,msg:""};
+function courseHTML(){
+  const n=allNotes().length, started=Object.keys(S.cards).length;
+  return `<div class="expl"><p><b>Your course is built in</b></p><p class="small muted">${n} sentences from A1 to B1, all spoken Brazilian, stored on your phone. They arrive in level order through your daily new sentences. ${started} started so far.</p>${SAMPLE?`<p class="small muted" style="margin-top:8px">For anything the course doesn’t cover, add a topic of your own below.</p>`:""}</div>`;
+}
+function rerenderCourse(){if(VIEW==="progress")renderProgress();else if(VIEW==="study"&&!ST.cur&&!LS.on)renderStudy();}
+async function buildCourse(){
+  if(!SAMPLE||CB.running)return;CB.running=true;const tok=++CB.token;S.courseDone=S.courseDone||[];
+  for(const [lvl,topic] of COURSE){
+    if(tok!==CB.token)break;if(S.courseDone.includes(topic))continue;
+    CB.msg=`Writing “${topic}”…`;rerenderCourse();
+    try{await genBatch(topic,lvl,25);}catch(e){if(e.code!=="empty"){CB.msg=aiError(e);CB.running=false;save();rerenderCourse();return;}}
+    if(tok!==CB.token)break;S.courseDone.push(topic);save();
+  }
+  if(tok===CB.token){CB.running=false;CB.msg=S.courseDone.length>=COURSE.length?"Done.":"";if(S.courseDone.length>=COURSE.length)toast("Full course ready");}
+  ST.built=false;save();rerenderCourse();
+}
+function stopCourse(){CB.token++;CB.running=false;CB.msg="Paused";rerenderCourse();}
 function startListen(){
   let list=allNotes().filter(n=>S.cards[n.id]&&S.cards[n.id].reps>0).sort((a,b)=>S.cards[a.id].due-S.cards[b.id].due).slice(0,40);
   if(!list.length)list=allNotes().slice(0,20);
@@ -604,7 +717,7 @@ async function runListen(tok){
     LS.phase="en";renderStudy();await say(n.en,{lang:"en"});if(tok!==LS.token)return;
     LS.phase="think";renderStudy();await wait(3200);if(tok!==LS.token)return;
     LS.phase="pt";renderStudy();await say(n.pt);await wait(800);if(tok!==LS.token)return;await say(n.pt,{rate:S.rate*0.85});await wait(1400);
-    if(tok!==LS.token)return;L().sec+=(Date.now()-t0)/1000;saveSoon();LS.i++;
+    if(tok!==LS.token)return;L().sec+=(Date.now()-t0)/1000;addXP(2);LS.i++;
   }
   if(tok===LS.token){LS.on=false;save();toast("Drill finished");renderStudy();}
 }
@@ -626,7 +739,7 @@ function renderSpeak(){
 }
 function chatHTML(){
   if(!SAMPLE_READY)return `<p class="muted">Checking for Claude access…</p>`;
-  if(!SAMPLE)return `<p class="muted">Add your Anthropic API key in Progresso, Settings, to turn this on. Everything else works without it.</p>`;
+  if(!SAMPLE)return `<p class="muted">Add your API key or connect your Mac in Progresso, Settings, to turn this on. Everything else works without it.</p>`;
   if(!CH.scen)return `<p class="muted small" style="margin-bottom:12px">Chat with Bia, a paulistana who talks like a real person. She flags mistakes, and also anything correct but textbook, showing how a Brazilian would actually say it. Speaking beats typing, if your mic works here.</p>`+SCENARIOS.map(s=>`<button class="scen" data-act="scen" data-id="${s.id}"><b>${esc(s.t)}</b><span class="muted small">${esc(s.d)}</span></button>`).join("");
   const sc=SCENARIOS.find(s=>s.id===CH.scen);
   const msgs=CH.turns.map((t,i)=>{
@@ -664,7 +777,7 @@ async function askBia(){
 }
 function sendChat(){
   const i=$("#chatin");if(!i||CH.busy)return;const t=i.value.trim();if(!t)return;
-  CH.turns.push({role:"me",pt:t});L().chat++;save();askBia();
+  CH.turns.push({role:"me",pt:t});L().chat++;addXP(15);save();askBia();
 }
 function shadowHTML(){
   if(!SH.d)return `<p class="muted small" style="margin-bottom:12px">Listen to each line, then say it out loud along with or just after the speaker, copying rhythm and melody, not just words. Studies on shadowing link it to gains in fluency and pronunciation.</p>`+DIALOGUES.map((d,i)=>`<button class="scen" data-act="shOpen" data-i="${i}"><b>${esc(d.t)}</b><span class="muted small">${esc(d.d)}</span></button>`).join("");
@@ -681,7 +794,7 @@ async function shadowPlay(tok){
     await say(d.l[i][0],{rate:SH.slow?0.72:S.rate});if(tok!==SH.token)return;
     await wait(Math.max(1600,d.l[i][0].length*85));L().sec+=(Date.now()-t0)/1000;
   }
-  if(tok===SH.token){SH.playing=false;L().shadow++;save();toast("Dialogue done. Do it once more without English.");renderSpeak();}
+  if(tok===SH.token){SH.playing=false;L().shadow++;addXP(30);save();toast("Dialogue done. Do it once more without English.");renderSpeak();}
 }
 function soundsHTML(){
   const p=QZ.pair;
@@ -744,7 +857,8 @@ function level(){
   const g=GRAMMAR.filter(x=>(S.gram[x.id]||0)>=0.8).length;
   if(known<80)return "A1";if(known<220)return "A2";if(known<450)return g>=8?"B1":"A2+";return g>=11?"B1+":"B1";
 }
-function streak(){let n=0,d=new Date();if((S.log[dkey(d)]||{}).sec<600)d=new Date(d.getTime()-DAY);while(((S.log[dkey(d)]||{}).sec||0)>=600){n++;d=new Date(d.getTime()-DAY);}return n;}
+function activeDay(l){return !!l&&((l.sec||0)>=600||(l.xp||0)>=150);}
+function streak(){let n=0,d=new Date();if(!activeDay(S.log[dkey(d)]))d=new Date(d.getTime()-DAY);while(activeDay(S.log[dkey(d)])){n++;d=new Date(d.getTime()-DAY);}return n;}
 function renderProgress(){
   const totalSec=Object.values(S.log).reduce((a,l)=>a+(l.sec||0)+(l.imm||0)*60,0);
   const cards=Object.values(S.cards), known=cards.filter(c=>c.ivl>=7).length, started=cards.filter(c=>c.reps>0).length;
@@ -755,7 +869,7 @@ function renderProgress(){
   $("#v-progress").innerHTML=`<h1>Progresso</h1>
   <div class="stats" style="margin-top:14px">
     <div class="stat"><div class="v">${level()}</div><div class="k">Estimated level</div></div>
-    <div class="stat"><div class="v">${streak()}</div><div class="k">Day streak (10+ min)</div></div>
+    <div class="stat"><div class="v">${streak()}</div><div class="k">Day streak</div></div>
     <div class="stat"><div class="v">${hrs.toFixed(1)}h</div><div class="k">Total time logged</div></div>
     <div class="stat"><div class="v">${Math.round(projected)}h</div><div class="k">By 30 Jan at your daily target</div></div>
     <div class="stat"><div class="v">${known}</div><div class="k">Sentences you know well</div></div>
@@ -769,13 +883,19 @@ function renderProgress(){
   <h2 class="section-title">Settings</h2>
   <div class="list">
     <div class="setting"><span>New sentences a day</span><select data-set="newPerDay">${[10,15,20,25,30,40].map(x=>`<option ${S.newPerDay===x?"selected":""}>${x}</option>`).join("")}</select></div>
+    <div class="setting"><span>Daily XP goal</span><select data-set="xpGoal">${[200,300,400,600,800].map(x=>`<option ${S.xpGoal===x?"selected":""}>${x}</option>`).join("")}</select></div>
     <div class="setting"><span>Daily target (minutes)</span><select data-set="target">${[30,45,60,90,120,150].map(x=>`<option ${S.target===x?"selected":""}>${x}</option>`).join("")}</select></div>
     <div class="setting"><span>Speech speed</span><select data-set="rate">${[[0.8,"Slow"],[0.95,"Natural"],[1.1,"Fast"]].map(([x,t])=>`<option value="${x}" ${S.rate===x?"selected":""}>${t}</option>`).join("")}</select></div>
     <div class="setting"><span>Portuguese voice</span><select data-set="voice"><option value="">Automatic</option>${pv.map(v=>`<option value="${esc(v.name)}" ${S.voice===v.name?"selected":""}>${esc(v.name)} (${esc(v.lang)})</option>`).join("")}</select></div>
-    <div class="setting" style="flex-wrap:wrap"><span>Anthropic API key</span><span class="row" style="flex:1;min-width:200px"><input class="text" id="apikey" type="password" autocomplete="off" placeholder="${S.apiKey?"Saved. Paste to replace":"sk-ant-…"}" style="padding:8px 10px"><button class="chip" data-act="saveKey">Save</button>${S.apiKey?`<button class="chip" data-act="clearKey">Remove</button>`:""}</span></div>
+    <div class="setting"><span>AI for Bia and extras</span><select data-set="provider"><option value="anthropic" ${S.provider!=="local"?"selected":""}>Claude (API key)</option><option value="local" ${S.provider==="local"?"selected":""}>My Mac (Ollama)</option></select></div>
+    ${S.provider==="local"?`<div class="setting" style="flex-wrap:wrap"><span>Mac address</span><input class="text" id="localurl" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="https://your-mac.tailnet.ts.net" value="${esc(S.localUrl)}" style="flex:1;min-width:200px;padding:8px 10px"></div>
+    <div class="setting" style="flex-wrap:wrap"><span>Model</span><span class="row" style="flex:1;min-width:200px"><input class="text" id="localmodel" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="e.g. gemma3:12b" value="${esc(S.localModel)}" style="padding:8px 10px"><button class="chip" data-act="saveLocal">Save</button><button class="chip" data-act="testLocal">Test</button></span></div>`
+    :`<div class="setting" style="flex-wrap:wrap"><span>Anthropic API key</span><span class="row" style="flex:1;min-width:200px"><input class="text" id="apikey" type="password" autocomplete="off" placeholder="${S.apiKey?"Saved. Paste to replace":"sk-ant-…"}" style="padding:8px 10px"><button class="chip" data-act="saveKey">Save</button>${S.apiKey?`<button class="chip" data-act="clearKey">Remove</button>`:""}</span></div>`}
     <div class="setting"><span>Theme</span><select data-set="theme">${[["auto","Match phone"],["light","Light"],["dark","Dark"]].map(([x,t])=>`<option value="${x}" ${S.theme===x?"selected":""}>${t}</option>`).join("")}</select></div>
   </div>
-  <p class="note">${esc(SYNC)}. ${pv.length?"":"No Brazilian voice found on this device; install one in your phone’s text-to-speech settings."}</p>
+  <p class="note">${S.provider==="local"?"Bia runs on your Mac: free, but it needs your Mac awake and online, and replies are less natural than Claude’s.":"Your key stays on this phone only."} It isn’t in the app’s code, the link or backups. ${esc(SYNC)}. ${pv.length?"":"No Brazilian voice found on this device; install one in your phone’s text-to-speech settings."}</p>
+  <h2 class="section-title">Course</h2>
+  ${courseHTML()}
   <h2 class="section-title">Backup</h2>
   <div class="row" style="flex-wrap:wrap"><button class="btn quiet" data-act="export">Copy backup</button><button class="btn quiet" data-act="importShow">Restore backup</button><button class="btn quiet" data-act="reset">Reset all</button></div>
   <div id="bk"></div>`;
@@ -797,8 +917,11 @@ document.querySelector(".tabs").addEventListener("click",e=>{const b=e.target.cl
 const A={
   go:b=>showView(b.dataset.to),
   goSpeak:b=>{SP.mode=b.dataset.mode;showView("speak");},
-  imm:b=>{L().imm+=Number(b.dataset.m);save();renderToday();toast("Immersion logged");},
+  imm:b=>{const m=Number(b.dataset.m);L().imm+=m;addXP(m);save();renderToday();toast(`Immersion logged, +${m} XP`);},
   handsfree:()=>startListen(),
+  mission:()=>{if(MISSION)MISSION.go();},
+  celeClose:()=>{$("#celehost").innerHTML="";},
+  course:()=>{CB.running?stopCourse():buildCourse();},
   listenStop:()=>stopListen(),
   play:()=>{const n=noteById(ST.cur);if(n)say(n.pt);},
   reveal:()=>doReveal(),
@@ -832,20 +955,26 @@ const A={
   grStart:()=>{const g=GRAMMAR[GR.u];GR.list=g.d.map(q=>{const o=q[1].map((x,k)=>({x,k})).sort(()=>Math.random()-.5);return [q[0],o.map(y=>y.x),o.findIndex(y=>y.k===q[2]),q[3]];}).sort(()=>Math.random()-.5);GR.i=0;GR.score=0;GR.pick=-1;renderGrammar();},
   grAI:()=>grAI(),
   grPick:b=>{const q=GR.list[GR.i];GR.pick=Number(b.dataset.k);if(GR.pick===q[2])GR.score++;renderGrammar();say(q[0].includes("___")?q[0].replace("___",q[1][q[2]]).replace(/\s*\(.*?\)\s*$/,"").replace(/[“”]/g,""):q[1][q[2]]);},
-  grNext:()=>{GR.i++;GR.pick=-1;if(GR.i>=GR.list.length){const g=GRAMMAR[GR.u];const pct=GR.score/GR.list.length;S.gram[g.id]=Math.max(S.gram[g.id]||0,pct);L().gram++;save();}renderGrammar();},
-  export:async()=>{const txt=JSON.stringify(S);try{await navigator.clipboard.writeText(txt);toast("Backup copied. Paste it somewhere safe.");}catch(e){$("#bk").innerHTML=`<p class="note">Copy all of this text:</p><textarea class="text" readonly>${esc(txt)}</textarea>`;}},
+  grNext:()=>{GR.i++;GR.pick=-1;if(GR.i>=GR.list.length){const g=GRAMMAR[GR.u];const pct=GR.score/GR.list.length;S.gram[g.id]=Math.max(S.gram[g.id]||0,pct);L().gram++;addXP(20+GR.score*5);save();}renderGrammar();},
+  export:async()=>{const txt=JSON.stringify(Object.assign({},S,{apiKey:""}));try{await navigator.clipboard.writeText(txt);toast("Backup copied. Paste it somewhere safe.");}catch(e){$("#bk").innerHTML=`<p class="note">Copy all of this text:</p><textarea class="text" readonly>${esc(txt)}</textarea>`;}},
   importShow:()=>{$("#bk").innerHTML=`<p class="note">Paste a backup, then restore. This replaces current progress.</p><textarea class="text" id="imp"></textarea><button class="btn" style="margin-top:8px" data-act="import">Restore</button>`;},
-  import:()=>{try{const d=JSON.parse($("#imp").value);if(!d||!d.v)throw 0;S=Object.assign(defaults(),d);save();applyTheme();ST.built=false;toast("Backup restored");renderProgress();}catch(e){toast("That text isn’t a Fala backup.");}},
+  import:()=>{try{const d=JSON.parse($("#imp").value);if(!d||!d.v)throw 0;const k=S.apiKey;S=Object.assign(defaults(),d);S.apiKey=k;setupAI();save();applyTheme();ST.built=false;toast("Backup restored");renderProgress();}catch(e){toast("That text isn’t a Fala backup.");}},
   saveKey:()=>{const v=($("#apikey").value||"").trim();if(!v){toast("Paste a key first.");return;}S.apiKey=v;setupAI();save();toast("Key saved on this phone");renderProgress();},
+  saveLocal:()=>{S.localUrl=($("#localurl").value||"").trim();S.localModel=($("#localmodel").value||"").trim();setupAI();save();toast(S.localUrl&&S.localModel?"Mac settings saved":"Add both the address and the model");renderProgress();},
+  testLocal:async()=>{const u=($("#localurl").value||"").trim().replace(/\/+$/,"");if(!u){toast("Add your Mac’s address first.");return;}
+    try{const r=await fetch(u+"/api/tags");const d=await r.json();const names=(d.models||[]).map(m=>m.name);const want=($("#localmodel").value||"").trim();
+      toast(names.length?(want&&!names.includes(want)&&!names.some(n=>n.startsWith(want+":"))?`Connected, but no “${want}”. You have: ${names.slice(0,3).join(", ")}`:`Connected. ${names.length} model${names.length===1?"":"s"} on your Mac.`):"Connected, but no models installed yet.");}
+    catch(e){toast("Can’t reach your Mac. Check Ollama, Tailscale and the address.");}},
   clearKey:()=>{S.apiKey="";setupAI();save();toast("Key removed");renderProgress();},
   reset:()=>{if(confirm("Delete all progress? This can’t be undone.")){const k=S.apiKey;S=defaults();S.apiKey=k;save();ST.built=false;ST.cur=null;applyTheme();toast("Progress reset");renderProgress();}}
 };
 document.addEventListener("click",e=>{const b=e.target.closest("[data-act]");if(!b||b.disabled)return;const f=A[b.dataset.act];if(f)f(b,e);});
 document.addEventListener("change",e=>{const el=e.target.closest("[data-set]");if(!el)return;const k=el.dataset.set;
   if(k==="autoplay")S.autoplay=el.checked;
-  else if(k==="voice"||k==="theme")S[k]=el.value;
+  else if(k==="voice"||k==="theme"||k==="provider")S[k]=el.value;
   else S[k]=Number(el.value);
   if(k==="theme")applyTheme();
+  if(k==="provider"){setupAI();renderProgress();}
   if(k==="newPerDay")ST.built=false;
   save();if(k==="voice")say("Olá! Essa é a minha voz.");});
 document.addEventListener("visibilitychange",()=>{if(document.hidden)save();});
